@@ -1,12 +1,8 @@
 # Status Grid Card
 
-Flexible Home Assistant custom card for status and metric tiles, with responsive layouts, profile-based thresholds, and a built-in visual editor. I felt that other available cards were too generic, so I carefully created this with GPT 5.4 Codex.
+Flexible Home Assistant custom card for status and metric tiles, with responsive layouts, profile-based thresholds, and a built-in visual editor. I felt that other available cards were too generic, so I carefully created this with GPT 5.4 Codex. It actually uses modern HA calls and features, and follows your themes properly.
 
 ![banner](banner.png)
-
-## Files
-
-- `status-grid-card.js`: the Lovelace card module
 
 ## Install
 You can install using HACS:
@@ -17,6 +13,7 @@ Or manually add the card as a Lovelace resource:
 
 - URL: `/path/to/status-grid-card.js`
 - Type: `module`
+- 
 ## Example YAML
 
 ```yaml
