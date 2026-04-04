@@ -7,19 +7,14 @@ Flexible Home Assistant custom card for status and metric tiles, with responsive
 - `status-grid-card.js`: the Lovelace card module
 
 ## Install
+You can install using HACS:
 
-1. Keep this folder at:
-   - `/config/www/custom/status-grid/`
-2. In Home Assistant, go to `Settings -> Dashboards -> Resources`
-3. Add this resource:
-   - URL: `/local/custom/status-grid/status-grid-card.js`
-   - Type: `JavaScript Module`
-   - If Home Assistant keeps serving an older editor, change it to something like:
-     - `/local/custom/status-grid/status-grid-card.js?v=20260403`
-4. Refresh Home Assistant fully.
-5. Add a card and search for:
-   - `Status Grid Card`
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=inventor7777&repository=status-grid-card&category=plugin)
 
+Or manually add the card as a Lovelace resource:
+
+- URL: `/path/to/status-grid-card.js`
+- Type: `module`
 ## Example YAML
 
 ```yaml
