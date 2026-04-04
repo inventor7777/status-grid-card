@@ -89,3 +89,5 @@ tiles:
 - Most profiles use thresholds derived from a percentage of `bar_max`.
 - `battery` defaults to inverse thresholds, where lower values are worse.
 - Leave `unit` blank for temperature if you want Home Assistant to use the entity's own unit automatically.
+
+Full disclaimer: This was fully vibe coded by GPT 5.4 Codex. However, I personally use this card and I am happy with it, so I decided to post in case it could help anyone else.
