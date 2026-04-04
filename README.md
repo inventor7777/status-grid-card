@@ -13,7 +13,7 @@ Or manually add the card as a Lovelace resource:
 
 - URL: `/path/to/status-grid-card.js`
 - Type: `module`
-- 
+ 
 ## Example YAML
 
 ```yaml
