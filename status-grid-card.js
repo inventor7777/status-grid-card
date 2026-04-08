@@ -11,6 +11,8 @@ const AUTO_TILE_COLUMNS = "auto";
 const VALID_TILE_COLUMNS = [1, 2, 4, AUTO_TILE_COLUMNS];
 const DEFAULT_TILE_COUNT = 4;
 const VALID_TILE_COUNTS = [2, 4, 6, 8];
+const DEFAULT_SECTION_ROWS = 2;
+const VALID_SECTION_ROWS = [2, 4, 6, 8];
 const SMALL_SCREEN_STACK_BREAKPOINT = 480;
 const INVALID_STATE_VALUES = ["unknown", "unavailable", "None", null, undefined];
 const DEFAULT_PROFILE = "custom";
@@ -83,8 +85,8 @@ class StatusGridCard extends HTMLElement {
       title: "",
       tile_count: DEFAULT_TILE_COUNT,
       tile_columns: DEFAULT_TILE_COLUMNS,
+      section_rows: DEFAULT_SECTION_ROWS,
       stack_on_small_screens: false,
-      fill_height: false,
       colors: { ...DEFAULT_STATUS_COLORS },
       tiles: Array.from({ length: DEFAULT_TILE_COUNT }, (_, index) => getDefaultTile(index)),
     };
@@ -98,8 +100,8 @@ class StatusGridCard extends HTMLElement {
       title: config?.title ?? "",
       tile_count: tileCount,
       tile_columns: this._normalizeTileColumns(config?.tile_columns),
+      section_rows: this._normalizeSectionRows(config?.section_rows, config?.fill_height),
       stack_on_small_screens: Boolean(config?.stack_on_small_screens),
-      fill_height: Boolean(config?.fill_height),
       colors: this._normalizeColors(config?.colors),
       tiles: this._buildTiles(config?.tiles, tileCount),
     };
@@ -130,15 +132,13 @@ class StatusGridCard extends HTMLElement {
 
   getGridOptions() {
     const gridColumns = this._normalizeTileColumns(this._config?.tile_columns);
-    const tileCount = this._normalizeTileCount(this._config?.tile_count);
-    const fillHeight = Boolean(this._config?.fill_height);
+    const rows = this._normalizeSectionRows(this._config?.section_rows, this._config?.fill_height);
     const columns = gridColumns === 1 ? 3 : gridColumns === 4 ? 12 : 6;
-    const internalColumns = gridColumns === AUTO_TILE_COLUMNS ? 2 : gridColumns;
-    const tileRows = Math.max(1, Math.ceil(tileCount / internalColumns));
 
     return {
-      rows: fillHeight ? Math.max(2, tileRows * 2) : 2,
+      rows,
       min_rows: 2,
+      max_rows: 12,
       columns,
       min_columns: 3,
       max_columns: 12,
@@ -156,6 +156,12 @@ class StatusGridCard extends HTMLElement {
     const num = Number(value);
     if (VALID_TILE_COUNTS.includes(num)) return num;
     return DEFAULT_TILE_COUNT;
+  }
+
+  _normalizeSectionRows(value, legacyFillHeight = false) {
+    const num = Number(value);
+    if (VALID_SECTION_ROWS.includes(num)) return num;
+    return legacyFillHeight ? 4 : DEFAULT_SECTION_ROWS;
   }
 
   _normalizeColors(colors) {
@@ -449,7 +455,6 @@ class StatusGridCard extends HTMLElement {
     const gridColumns = this._normalizeTileColumns(this._config.tile_columns);
     const isAutoLayout = gridColumns === AUTO_TILE_COLUMNS;
     const stackOnSmallScreens = Boolean(this._config.stack_on_small_screens);
-    const fillHeight = Boolean(this._config.fill_height);
     const title = this._renderedTitle ?? this._config.title ?? "";
     const trimmedTitle = String(title).trim();
     const titleHtml = trimmedTitle
@@ -520,7 +525,7 @@ class StatusGridCard extends HTMLElement {
       .join("");
 
     this.innerHTML = `
-      <div class="status-grid-card ${fillHeight ? "status-grid-card--fill-height" : ""}">
+      <div class="status-grid-card">
         <ha-card>
           <div class="wrap">
             ${titleHtml}
@@ -747,8 +752,8 @@ class StatusGridCardEditor extends HTMLElement {
       title: config?.title ?? "",
       tile_count: tileCount,
       tile_columns: this._normalizeTileColumns(config?.tile_columns),
+      section_rows: this._normalizeSectionRows(config?.section_rows, config?.fill_height),
       stack_on_small_screens: Boolean(config?.stack_on_small_screens),
-      fill_height: Boolean(config?.fill_height),
       colors: {
         ...DEFAULT_STATUS_COLORS,
         ...(config?.colors || {}),
@@ -839,13 +844,14 @@ class StatusGridCardEditor extends HTMLElement {
     this._emitConfig();
   }
 
-  _updateStackOnSmallScreens(value) {
-    this._config = { ...this._config, stack_on_small_screens: Boolean(value) };
+  _updateSectionRows(value) {
+    const sectionRows = this._normalizeSectionRows(value);
+    this._config = { ...this._config, section_rows: sectionRows };
     this._emitConfig();
   }
 
-  _updateFillHeight(value) {
-    this._config = { ...this._config, fill_height: Boolean(value) };
+  _updateStackOnSmallScreens(value) {
+    this._config = { ...this._config, stack_on_small_screens: Boolean(value) };
     this._emitConfig();
   }
 
@@ -909,8 +915,8 @@ class StatusGridCardEditor extends HTMLElement {
         </label>
         <ha-selector id="tile_count"></ha-selector>
         <ha-selector id="tile_columns"></ha-selector>
+        <ha-selector id="section_rows"></ha-selector>
         <ha-selector id="stack_on_small_screens"></ha-selector>
-        <ha-selector id="fill_height"></ha-selector>
         <div class="editor-section">
           <div class="editor-section__title">COLORS</div>
           <label class="editor-color">
@@ -1054,8 +1060,8 @@ class StatusGridCardEditor extends HTMLElement {
     this._elements.title = this.querySelector("#title");
     this._elements.tileCount = this.querySelector("#tile_count");
     this._elements.tileColumns = this.querySelector("#tile_columns");
+    this._elements.sectionRows = this.querySelector("#section_rows");
     this._elements.stackOnSmallScreens = this.querySelector("#stack_on_small_screens");
-    this._elements.fillHeight = this.querySelector("#fill_height");
     this._elements.colorGood = this.querySelector("#color_good");
     this._elements.colorWarn = this.querySelector("#color_warn");
     this._elements.colorBad = this.querySelector("#color_bad");
@@ -1086,10 +1092,16 @@ class StatusGridCardEditor extends HTMLElement {
     };
     this._elements.tileColumns.label = "Widget layout";
 
+    this._elements.sectionRows.selector = {
+      select: {
+        mode: "dropdown",
+        options: VALID_SECTION_ROWS.map((rows) => ({ value: String(rows), label: String(rows) })),
+      },
+    };
+    this._elements.sectionRows.label = "Sections height";
+
     this._elements.stackOnSmallScreens.selector = { boolean: {} };
     this._elements.stackOnSmallScreens.label = "Stack on small screens";
-    this._elements.fillHeight.selector = { boolean: {} };
-    this._elements.fillHeight.label = "Fill available height";
     this._configureSelectors();
 
     const handleTileCountChange = (event) => {
@@ -1100,18 +1112,18 @@ class StatusGridCardEditor extends HTMLElement {
       this._updateTileColumns(this._getEventValue(event));
     };
 
+    const handleSectionRowsChange = (event) => {
+      this._updateSectionRows(this._getEventValue(event));
+    };
+
     const handleStackOnSmallScreensChange = (event) => {
       this._updateStackOnSmallScreens(this._getEventValue(event));
     };
 
-    const handleFillHeightChange = (event) => {
-      this._updateFillHeight(this._getEventValue(event));
-    };
-
     this._elements.tileCount?.addEventListener("value-changed", handleTileCountChange);
     this._elements.tileColumns?.addEventListener("value-changed", handleTileColumnsChange);
+    this._elements.sectionRows?.addEventListener("value-changed", handleSectionRowsChange);
     this._elements.stackOnSmallScreens?.addEventListener("value-changed", handleStackOnSmallScreensChange);
-    this._elements.fillHeight?.addEventListener("value-changed", handleFillHeightChange);
 
     this._elements.colorGood?.addEventListener("input", (event) => {
       this._updateColor("good", event.target.value);
@@ -1153,6 +1165,12 @@ class StatusGridCardEditor extends HTMLElement {
     const num = Number(value);
     if (VALID_TILE_COUNTS.includes(num)) return num;
     return DEFAULT_TILE_COUNT;
+  }
+
+  _normalizeSectionRows(value, legacyFillHeight = false) {
+    const num = Number(value);
+    if (VALID_SECTION_ROWS.includes(num)) return num;
+    return legacyFillHeight ? 4 : DEFAULT_SECTION_ROWS;
   }
 
   _normalizeProfile(value) {
@@ -1279,12 +1297,12 @@ class StatusGridCardEditor extends HTMLElement {
       this._elements.tileColumns.hass = this._hass;
     }
 
-    if (this._elements.stackOnSmallScreens) {
-      this._elements.stackOnSmallScreens.hass = this._hass;
+    if (this._elements.sectionRows) {
+      this._elements.sectionRows.hass = this._hass;
     }
 
-    if (this._elements.fillHeight) {
-      this._elements.fillHeight.hass = this._hass;
+    if (this._elements.stackOnSmallScreens) {
+      this._elements.stackOnSmallScreens.hass = this._hass;
     }
 
     this._elements.fields?.forEach((field) => {
@@ -1316,17 +1334,17 @@ class StatusGridCardEditor extends HTMLElement {
     }
 
     if (
+      this._elements.sectionRows &&
+      this._elements.sectionRows.value !== String(this._config.section_rows || DEFAULT_SECTION_ROWS)
+    ) {
+      this._elements.sectionRows.value = String(this._config.section_rows || DEFAULT_SECTION_ROWS);
+    }
+
+    if (
       this._elements.stackOnSmallScreens
       && this._elements.stackOnSmallScreens.value !== Boolean(this._config.stack_on_small_screens)
     ) {
       this._elements.stackOnSmallScreens.value = Boolean(this._config.stack_on_small_screens);
-    }
-
-    if (
-      this._elements.fillHeight
-      && this._elements.fillHeight.value !== Boolean(this._config.fill_height)
-    ) {
-      this._elements.fillHeight.value = Boolean(this._config.fill_height);
     }
 
     const colors = {
