@@ -209,7 +209,11 @@ class StatusGridCard extends HTMLElement {
     const columns = this._getRenderedColumnCount(grid);
     const rows = Math.max(1, Math.ceil(tileCount / columns));
     const cardHeight = card.clientHeight;
-    const naturalGridHeight = grid.scrollHeight;
+    const tileElements = Array.from(grid.querySelectorAll(".tile"));
+    const naturalGridHeight = tileElements.reduce((maxBottom, tileEl) => {
+      const bottom = tileEl.offsetTop + tileEl.offsetHeight;
+      return Math.max(maxBottom, bottom);
+    }, 0);
 
     if (!cardHeight || !naturalGridHeight) return;
 
