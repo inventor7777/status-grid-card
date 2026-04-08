@@ -1070,16 +1070,28 @@ class StatusGridCardEditor extends HTMLElement {
               <span class="editor-tile__meta" data-tile-meta="${index}"></span>
             </div>
             <div class="editor-section editor-section--tile">
-              <div data-index="${index}" data-field-wrap="profile"><ha-selector data-index="${index}" data-field="profile" data-selector-type="profile"></ha-selector></div>
-              <div data-index="${index}" data-field-wrap="name"><ha-textfield data-index="${index}" data-field="name" label="Label"></ha-textfield></div>
-              <div data-index="${index}" data-field-wrap="icon"><ha-selector data-index="${index}" data-field="icon" data-selector-type="icon"></ha-selector></div>
-              <div data-index="${index}" data-field-wrap="entity"><ha-selector data-index="${index}" data-field="entity" data-selector-type="entity"></ha-selector></div>
-              <div data-index="${index}" data-field-wrap="unit"><ha-textfield data-index="${index}" data-field="unit" label="Unit override"></ha-textfield></div>
-              <div data-index="${index}" data-field-wrap="bar_max"><ha-textfield data-index="${index}" data-field="bar_max" label="Bar max"></ha-textfield></div>
-              <div data-index="${index}" data-field-wrap="invert_thresholds"><ha-selector data-index="${index}" data-field="invert_thresholds" data-selector-type="invert_thresholds"></ha-selector></div>
-              <div data-index="${index}" data-field-wrap="hide_bar"><ha-selector data-index="${index}" data-field="hide_bar" data-selector-type="hide_bar"></ha-selector></div>
-              <div data-index="${index}" data-field-wrap="sub_entity"><ha-selector data-index="${index}" data-field="sub_entity" data-selector-type="sub_entity"></ha-selector></div>
-              <div data-index="${index}" data-field-wrap="sub_unit"><ha-textfield data-index="${index}" data-field="sub_unit" label="Sub unit override"></ha-textfield></div>
+              <div class="editor-group">
+                <div class="editor-group__title">Header Title</div>
+                <div data-index="${index}" data-field-wrap="profile"><ha-selector data-index="${index}" data-field="profile" data-selector-type="profile"></ha-selector></div>
+                <div data-index="${index}" data-field-wrap="name"><ha-textfield data-index="${index}" data-field="name" label="Label"></ha-textfield></div>
+                <div data-index="${index}" data-field-wrap="icon"><ha-selector data-index="${index}" data-field="icon" data-selector-type="icon"></ha-selector></div>
+              </div>
+              <div class="editor-group">
+                <div class="editor-group__title">Entity</div>
+                <div data-index="${index}" data-field-wrap="entity"><ha-selector data-index="${index}" data-field="entity" data-selector-type="entity"></ha-selector></div>
+                <div data-index="${index}" data-field-wrap="unit"><ha-textfield data-index="${index}" data-field="unit" label="Unit override"></ha-textfield></div>
+              </div>
+              <div class="editor-group">
+                <div class="editor-group__title">Sub Entity</div>
+                <div data-index="${index}" data-field-wrap="sub_entity"><ha-selector data-index="${index}" data-field="sub_entity" data-selector-type="sub_entity"></ha-selector></div>
+                <div data-index="${index}" data-field-wrap="sub_unit"><ha-textfield data-index="${index}" data-field="sub_unit" label="Sub unit override"></ha-textfield></div>
+              </div>
+              <div class="editor-group">
+                <div class="editor-group__title">Tile</div>
+                <div data-index="${index}" data-field-wrap="bar_max"><ha-textfield data-index="${index}" data-field="bar_max" label="Bar max"></ha-textfield></div>
+                <div data-index="${index}" data-field-wrap="invert_thresholds"><ha-selector data-index="${index}" data-field="invert_thresholds" data-selector-type="invert_thresholds"></ha-selector></div>
+                <div data-index="${index}" data-field-wrap="hide_bar"><ha-selector data-index="${index}" data-field="hide_bar" data-selector-type="hide_bar"></ha-selector></div>
+              </div>
             </div>
           </ha-expansion-panel>
         `).join("")}
@@ -1103,6 +1115,20 @@ class StatusGridCardEditor extends HTMLElement {
 
         .editor-section--tile {
           margin-top: 8px;
+        }
+
+        .editor-group {
+          display: grid;
+          gap: 10px;
+        }
+
+        .editor-group__title {
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          opacity: 0.7;
+          padding-top: 2px;
         }
 
         .editor-section__title {
