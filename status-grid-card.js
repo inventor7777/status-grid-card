@@ -446,6 +446,8 @@ class StatusGridCard extends HTMLElement {
     const isAutoLayout = gridColumns === AUTO_TILE_COLUMNS;
     const stackOnSmallScreens = Boolean(this._config.stack_on_small_screens);
     const fillHeight = Boolean(this._config.fill_height);
+    const tileCount = this._normalizeTileCount(this._config.tile_count);
+    const tileRows = isAutoLayout ? null : Math.max(1, Math.ceil(tileCount / gridColumns));
     const title = this._renderedTitle ?? this._config.title ?? "";
     const trimmedTitle = String(title).trim();
     const titleHtml = trimmedTitle
@@ -520,7 +522,7 @@ class StatusGridCard extends HTMLElement {
         <ha-card>
           <div class="wrap">
             ${titleHtml}
-            <div class="grid ${isAutoLayout ? "grid--auto" : ""} ${stackOnSmallScreens ? "grid--stack-small" : ""}" ${isAutoLayout ? "" : `style="--tile-columns:${gridColumns};"`}>${tilesHtml}</div>
+            <div class="grid ${isAutoLayout ? "grid--auto" : ""} ${fillHeight && !isAutoLayout ? "grid--fill-fixed" : ""} ${stackOnSmallScreens ? "grid--stack-small" : ""}" ${isAutoLayout ? "" : `style="--tile-columns:${gridColumns}; --tile-rows:${tileRows};"`}>${tilesHtml}</div>
           </div>
         </ha-card>
       </div>
@@ -572,6 +574,17 @@ class StatusGridCard extends HTMLElement {
         .status-grid-card.status-grid-card--fill-height .wrap {
           min-height: 100%;
           align-content: start;
+        }
+
+        .status-grid-card.status-grid-card--fill-height .grid.grid--fill-fixed {
+          height: 100%;
+          min-height: 0;
+          grid-template-rows: repeat(var(--tile-rows), minmax(0, 1fr));
+        }
+
+        .status-grid-card.status-grid-card--fill-height .grid.grid--fill-fixed .tile {
+          min-height: 0;
+          height: 100%;
         }
 
         .status-grid-card .grid.grid--auto {
