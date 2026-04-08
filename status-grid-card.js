@@ -520,10 +520,12 @@ class StatusGridCard extends HTMLElement {
         }
 
         .status-grid-card.status-grid-card--fill-height,
-        .status-grid-card.status-grid-card--fill-height ha-card,
-        .status-grid-card.status-grid-card--fill-height .wrap,
-        .status-grid-card.status-grid-card--fill-height .grid {
+        .status-grid-card.status-grid-card--fill-height ha-card {
           min-height: 100%;
+        }
+
+        .status-grid-card.status-grid-card--fill-height ha-card {
+          display: block;
         }
 
         .status-grid-card .wrap {
@@ -551,12 +553,8 @@ class StatusGridCard extends HTMLElement {
         }
 
         .status-grid-card.status-grid-card--fill-height .wrap {
-          grid-template-rows: auto minmax(0, 1fr);
-        }
-
-        .status-grid-card.status-grid-card--fill-height .grid {
-          align-content: stretch;
-          grid-auto-rows: minmax(50px, auto);
+          min-height: 100%;
+          align-content: start;
         }
 
         .status-grid-card .grid.grid--auto {
