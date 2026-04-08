@@ -796,14 +796,11 @@ class StatusGridCard extends HTMLElement {
         }
 
         .status-grid-card .tile.tile--no-bar .tile__value-main {
-          flex-direction: column;
-          align-items: flex-start;
-          gap: 4px;
+          align-items: baseline;
         }
 
         .status-grid-card .tile.tile--no-bar .tile__sub {
-          margin-left: 0;
-          text-align: left;
+          align-self: baseline;
         }
 
         .status-grid-card .tile__label-stack {
