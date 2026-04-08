@@ -5,7 +5,7 @@ const DEFAULT_TILES = [
   { key: "Tile_4", profile: "disk", name: "Disk", entity: "", unit: "%", sub_entity: "", sub_unit: "", icon: "mdi:harddisk" },
 ];
 
-const CARD_VERSION = "2026.04.08-1";
+const CARD_VERSION = "2026.04.08-2";
 const DEFAULT_TILE_COLUMNS = 2;
 const AUTO_TILE_COLUMNS = "auto";
 const VALID_TILE_COLUMNS = [1, 2, 4, AUTO_TILE_COLUMNS];
@@ -256,6 +256,20 @@ class StatusGridCard extends HTMLElement {
     return card.clientHeight - paddingTop - paddingBottom - titleHeight - titleGap;
   }
 
+  _getTitleMetrics(wrap) {
+    const wrapStyle = getComputedStyle(wrap);
+    const wrapGap = parseFloat(wrapStyle.rowGap || wrapStyle.gap || "0") || 0;
+    const titleEl = wrap.querySelector(".title");
+    const titleHeight = titleEl ? titleEl.getBoundingClientRect().height : 0;
+    const titleGap = titleEl ? wrapGap : 0;
+
+    return {
+      titleHeight,
+      titleGap,
+      totalOffset: titleHeight + titleGap,
+    };
+  }
+
   _applyCenteredGridLayout(grid) {
     grid.style.gridTemplateRows = "";
     grid.style.alignContent = "center";
@@ -281,15 +295,20 @@ class StatusGridCard extends HTMLElement {
     const { rows } = this._getTileRowCount(grid, tileCount);
     const naturalGridHeight = this._getNaturalGridHeight(grid);
     const availableGridHeight = this._getAvailableGridHeight(card, wrap);
+    const titleMetrics = this._getTitleMetrics(wrap);
     const gridGap = parseFloat(getComputedStyle(grid).rowGap || "0") || 0;
+    const extraHeight = availableGridHeight - naturalGridHeight;
+    const centerOffset = Math.max(0, Math.min(extraHeight, titleMetrics.totalOffset));
 
     if (!availableGridHeight || !naturalGridHeight) return;
+
+    grid.style.paddingBottom = centerOffset > 0 ? `${centerOffset}px` : "";
 
     if (availableGridHeight <= naturalGridHeight + 2) {
       return;
     }
 
-    const rowHeight = (availableGridHeight - (gridGap * (rows - 1))) / rows;
+    const rowHeight = (availableGridHeight - centerOffset - (gridGap * (rows - 1))) / rows;
     if (!Number.isFinite(rowHeight) || rowHeight <= 0) return;
 
     this._applyStretchedGridLayout(grid, rows, rowHeight);
