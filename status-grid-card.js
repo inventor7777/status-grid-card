@@ -337,8 +337,8 @@ class StatusGridCard extends HTMLElement {
     return {
       ...mergedTile,
       profile,
-      name: Object.hasOwn(explicitTile, "name") ? (explicitTile.name || defaults.name || "") : (defaults.name || ""),
-      icon: Object.hasOwn(explicitTile, "icon") ? (explicitTile.icon || defaults.icon || "") : (defaults.icon || ""),
+      name: Object.hasOwn(explicitTile, "name") ? (explicitTile.name ?? "") : (defaults.name || ""),
+      icon: Object.hasOwn(explicitTile, "icon") ? (explicitTile.icon ?? "") : (defaults.icon || ""),
       unit: Object.hasOwn(explicitTile, "unit") ? explicitTile.unit : (defaults.unit ?? ""),
       bar_min: Object.hasOwn(explicitTile, "bar_min") ? explicitTile.bar_min : (defaults.bar_min ?? ""),
       bar_max: Object.hasOwn(explicitTile, "bar_max") ? explicitTile.bar_max : (defaults.bar_max ?? ""),
@@ -1408,8 +1408,8 @@ class StatusGridCardEditor extends HTMLElement {
     return {
       ...mergedTile,
       profile,
-      name: Object.hasOwn(explicitTile, "name") ? (explicitTile.name || defaults.name || "") : (defaults.name || ""),
-      icon: Object.hasOwn(explicitTile, "icon") ? (explicitTile.icon || defaults.icon || "") : (defaults.icon || ""),
+      name: Object.hasOwn(explicitTile, "name") ? (explicitTile.name ?? "") : (defaults.name || ""),
+      icon: Object.hasOwn(explicitTile, "icon") ? (explicitTile.icon ?? "") : (defaults.icon || ""),
       unit: Object.hasOwn(explicitTile, "unit") ? explicitTile.unit : (defaults.unit ?? ""),
       bar_min: Object.hasOwn(explicitTile, "bar_min") ? explicitTile.bar_min : (defaults.bar_min ?? ""),
       bar_max: Object.hasOwn(explicitTile, "bar_max") ? explicitTile.bar_max : (defaults.bar_max ?? ""),
