@@ -5,7 +5,7 @@ const DEFAULT_TILES = [
   { key: "Tile_4", profile: "disk", name: "Disk", entity: "", unit: "%", sub_entity: "", sub_unit: "", icon: "mdi:harddisk" },
 ];
 
-const CARD_VERSION = "2026.04.04-1";
+const CARD_VERSION = "2026.04.07-1";
 const DEFAULT_TILE_COLUMNS = 2;
 const AUTO_TILE_COLUMNS = "auto";
 const VALID_TILE_COLUMNS = [1, 2, 4, AUTO_TILE_COLUMNS];
@@ -28,6 +28,14 @@ const TILE_PROFILES = {
   battery: { name: "Battery", icon: "mdi:battery", unit: "%", thresholds_pct: { warn: 30, bad: 15, direction: "low" }, bar_max: 100 },
   humidity: { name: "Humidity", icon: "mdi:water-percent", unit: "%", thresholds_pct: { warn: 70, bad: 90 }, bar_max: 100 },
   energy: { name: "Energy", icon: "mdi:lightning-bolt", unit: "", thresholds_pct: { warn: 70, bad: 90 }, bar_max: 100 },
+  dbm: {
+    name: "dBm",
+    icon: "mdi:wifi",
+    unit: " dBm",
+    thresholds: { warn: -70, bad: -75, direction: "low" },
+    bar_min: -100,
+    bar_max: -50,
+  },
   custom: { name: "Custom", icon: "mdi:gauge", unit: "", thresholds_pct: { warn: 70, bad: 90 }, bar_max: 100 },
 };
 
@@ -174,6 +182,7 @@ class StatusGridCard extends HTMLElement {
       name: Object.hasOwn(explicitTile, "name") ? (explicitTile.name || defaults.name || "") : (defaults.name || ""),
       icon: Object.hasOwn(explicitTile, "icon") ? (explicitTile.icon || defaults.icon || "") : (defaults.icon || ""),
       unit: Object.hasOwn(explicitTile, "unit") ? explicitTile.unit : (defaults.unit ?? ""),
+      bar_min: Object.hasOwn(explicitTile, "bar_min") ? explicitTile.bar_min : (defaults.bar_min ?? ""),
       bar_max: Object.hasOwn(explicitTile, "bar_max") ? explicitTile.bar_max : (defaults.bar_max ?? ""),
       invert_thresholds: Boolean(mergedTile.invert_thresholds),
       hide_bar: Boolean(mergedTile.hide_bar),
@@ -192,22 +201,47 @@ class StatusGridCard extends HTMLElement {
     return TILE_PROFILES[profile] || TILE_PROFILES[DEFAULT_PROFILE];
   }
 
-  _getBarMax(tile) {
+  _getBarRange(tile) {
     const profile = this._getProfileConfig(tile);
+    const rawMin = tile?.bar_min ?? profile.bar_min ?? 0;
     const rawValue = tile?.bar_max ?? profile.bar_max;
+    const min = Number(rawMin);
     const max = Number(rawValue);
-    return Number.isFinite(max) && max > 0 ? max : null;
+
+    if (!Number.isFinite(max)) {
+      return null;
+    }
+
+    if (!Number.isFinite(min)) {
+      return max > 0 ? { min: 0, max } : null;
+    }
+
+    return max > min ? { min, max } : null;
   }
 
   _getThresholds(tile) {
     const profile = this._getProfileConfig(tile);
-    const max = this._getBarMax(tile);
+    const range = this._getBarRange(tile);
+    const thresholds = profile.thresholds;
     const thresholdsPct = profile.thresholds_pct;
 
-    if (!thresholdsPct || !max) {
+    if (thresholds) {
+      const isProfileLowDirection = thresholds.direction === "low";
+      const isInverted = Boolean(tile?.invert_thresholds);
+      return {
+        warn: isInverted ? thresholds.bad : thresholds.warn,
+        bad: isInverted ? thresholds.warn : thresholds.bad,
+        direction: isInverted
+          ? (isProfileLowDirection ? undefined : "low")
+          : thresholds.direction,
+      };
+    }
+
+    if (!thresholdsPct || !range) {
       return null;
     }
 
+    const span = range.max - range.min;
     const isProfileLowDirection = thresholdsPct.direction === "low";
     const isInverted = Boolean(tile?.invert_thresholds);
     const effectiveDirection = isInverted
@@ -221,8 +255,8 @@ class StatusGridCard extends HTMLElement {
       : thresholdsPct.bad;
 
     return {
-      warn: (max * effectiveWarnPct) / 100,
-      bad: (max * effectiveBadPct) / 100,
+      warn: range.min + (span * effectiveWarnPct) / 100,
+      bad: range.min + (span * effectiveBadPct) / 100,
       direction: effectiveDirection,
     };
   }
@@ -282,13 +316,13 @@ class StatusGridCard extends HTMLElement {
 
   _getBarWidth(tile, value) {
     if (!Number.isFinite(value)) return 0;
-    const max = this._getBarMax(tile);
+    const range = this._getBarRange(tile);
 
-    if (!max) {
+    if (!range) {
       return 0;
     }
 
-    return Math.max(0, Math.min((value / max) * 100, 100));
+    return Math.max(0, Math.min(((value - range.min) / (range.max - range.min)) * 100, 100));
   }
 
   _formatValue(value, unit) {
@@ -751,6 +785,10 @@ class StatusGridCardEditor extends HTMLElement {
         nextTile.unit = nextProfile.unit ?? "";
       }
 
+      if ((tiles[index]?.bar_min ?? "") === (previousProfile.bar_min ?? "")) {
+        nextTile.bar_min = nextProfile.bar_min ?? "";
+      }
+
       if ((tiles[index]?.bar_max ?? "") === (previousProfile.bar_max ?? "")) {
         nextTile.bar_max = nextProfile.bar_max ?? "";
       }
@@ -1113,6 +1151,7 @@ class StatusGridCardEditor extends HTMLElement {
       name: Object.hasOwn(explicitTile, "name") ? (explicitTile.name || defaults.name || "") : (defaults.name || ""),
       icon: Object.hasOwn(explicitTile, "icon") ? (explicitTile.icon || defaults.icon || "") : (defaults.icon || ""),
       unit: Object.hasOwn(explicitTile, "unit") ? explicitTile.unit : (defaults.unit ?? ""),
+      bar_min: Object.hasOwn(explicitTile, "bar_min") ? explicitTile.bar_min : (defaults.bar_min ?? ""),
       bar_max: Object.hasOwn(explicitTile, "bar_max") ? explicitTile.bar_max : (defaults.bar_max ?? ""),
       invert_thresholds: Boolean(mergedTile.invert_thresholds),
       hide_bar: Boolean(mergedTile.hide_bar),
@@ -1159,6 +1198,7 @@ class StatusGridCardEditor extends HTMLElement {
             { value: "battery", label: "Battery" },
             { value: "humidity", label: "Humidity" },
             { value: "energy", label: "Energy" },
+            { value: "dbm", label: "dBm" },
             { value: "custom", label: "Custom" },
           ],
         },

@@ -72,7 +72,7 @@ tiles:
   - `2` = 2 x 2 grid
   - `4` = one horizontal row
 - `stack_on_small_screens` forces a single-column layout at `480px` wide and below, regardless of the selected widget layout.
-- Each tile can choose a `profile` such as `cpu`, `memory`, `disk`, `temperature`, `power`, `network`, `fan`, `time`, `voltage`, `battery`, `humidity`, `energy`, or `custom`.
+- Each tile can choose a `profile` such as `cpu`, `memory`, `disk`, `temperature`, `power`, `network`, `fan`, `time`, `voltage`, `battery`, `humidity`, `energy`, `dbm`, or `custom`.
 - Each tile can optionally define an `icon` using any MDI icon, and the visual editor now uses HA's native icon selector.
 - `unit` overrides the main entity unit, and `sub_unit` does the same for the sub-info entity.
 - `bar_max` sets the bar scale for the tile.
@@ -82,6 +82,7 @@ tiles:
 - Tapping a tile opens more-info for that entity.
 - Most profiles use thresholds derived from a percentage of `bar_max`.
 - `battery` defaults to inverse thresholds, where lower values are worse.
+- `dbm` uses absolute thresholds for signal strength: warning at `-70 dBm` and critical at `-75 dBm`, with a default bar range of `-100` to `-50`.
 - Leave `unit` blank for temperature if you want Home Assistant to use the entity's own unit automatically.
 
 Full disclaimer: This was fully vibe coded by GPT 5.4 Codex. However, I personally use this card and I am happy with it, so I decided to post in case it could help anyone else.
