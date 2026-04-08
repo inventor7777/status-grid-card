@@ -796,11 +796,11 @@ class StatusGridCard extends HTMLElement {
         }
 
         .status-grid-card .tile.tile--no-bar .tile__value-main {
-          align-items: baseline;
+          align-items: center;
         }
 
         .status-grid-card .tile.tile--no-bar .tile__sub {
-          align-self: baseline;
+          align-self: center;
         }
 
         .status-grid-card .tile__label-stack {
