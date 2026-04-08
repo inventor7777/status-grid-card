@@ -452,6 +452,21 @@ class StatusGridCard extends HTMLElement {
     return `${formatted}${unit || ""}`;
   }
 
+  _getDisplayValue(tile, stateObj, numericValue, unit) {
+    if (Number.isFinite(numericValue)) {
+      return this._formatValue(numericValue, unit);
+    }
+
+    if (tile?.profile === "custom") {
+      const rawValue = stateObj?.state;
+      if (!INVALID_STATE_VALUES.includes(rawValue)) {
+        return this._formatValueString(rawValue, unit);
+      }
+    }
+
+    return this._formatValue(numericValue, unit);
+  }
+
   _formatValueString(value, unit) {
     const numericValue = Number(value);
     if (Number.isFinite(numericValue)) {
@@ -569,6 +584,7 @@ class StatusGridCard extends HTMLElement {
         const subValue = this._getSubValue(tile);
         const unit = this._getUnit(tile, stateObj);
         const color = this._getColor(tile, value);
+        const displayValue = this._getDisplayValue(tile, stateObj, value, unit);
         const barWidth = this._getBarWidth(tile, value);
         const visibleBarWidth = barWidth > 0 ? Math.max(barWidth, 2) : 0;
         const barHtml = tile.hide_bar
@@ -600,7 +616,7 @@ class StatusGridCard extends HTMLElement {
                 ` : ""}
                 <div class="tile__value-main">
                   <div class="tile__value" style="color:${color}">
-                    ${this._escapeHtml(this._formatValue(value, unit))}
+                    ${this._escapeHtml(displayValue)}
                   </div>
                   ${subValue ? `
                     <button
