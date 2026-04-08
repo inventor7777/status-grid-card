@@ -81,7 +81,7 @@ tiles:
 - `hide_bar` removes the bar completely for a tile.
 - `colors.good`, `colors.warn`, and `colors.bad` set the shared normal, medium, and critical colors for all tiles.
 - Tapping a tile opens more-info for that entity.
-- Most profiles use thresholds derived from a percentage of `bar_max`.
+- Most profiles use thresholds derived from a percentage of `bar_max`, and those warning/critical thresholds can be customized per tile.
 - `battery` defaults to inverse thresholds, where lower values are worse.
 - `dbm` uses absolute thresholds for signal strength: warning at `-70 dBm` and critical at `-75 dBm`, with a default bar range of `-100` to `-50`.
 - Leave `unit` blank for temperature if you want Home Assistant to use the entity's own unit automatically.
