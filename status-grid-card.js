@@ -789,6 +789,8 @@ class StatusGridCard extends HTMLElement {
 
         .status-grid-card .tile.tile--no-bar .tile__value-row {
           align-self: center;
+          padding-block: 0;
+          transform: translateY(2px);
         }
 
         .status-grid-card .tile__label-stack {
