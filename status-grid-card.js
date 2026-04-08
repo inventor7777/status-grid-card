@@ -614,6 +614,12 @@ class StatusGridCard extends HTMLElement {
         </ha-card>
       </div>
       <style>
+        .status-grid-card {
+          display: block;
+          height: 100%;
+          min-height: 100%;
+        }
+
         .status-grid-card ha-card {
           overflow: hidden;
           background: var(--ha-card-background, var(--card-background-color));
