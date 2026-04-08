@@ -799,10 +799,6 @@ class StatusGridCard extends HTMLElement {
           align-items: center;
         }
 
-        .status-grid-card .tile.tile--no-bar .tile__sub {
-          align-self: center;
-        }
-
         .status-grid-card .tile__label-stack {
           display: flex;
           flex-direction: column;
@@ -820,9 +816,11 @@ class StatusGridCard extends HTMLElement {
         .status-grid-card .tile__value-row {
           display: flex;
           align-items: center;
+          align-self: center;
           gap: 6px;
           min-width: 0;
           min-height: 0;
+          width: 100%;
           padding-block: 2px;
         }
 
@@ -851,6 +849,7 @@ class StatusGridCard extends HTMLElement {
           display: inline-block;
           font: inherit;
           font-size: 14px;
+          line-height: 1;
           color: var(--secondary-text-color);
           margin-left: auto;
           text-align: right;
@@ -859,6 +858,7 @@ class StatusGridCard extends HTMLElement {
           background: none;
           border: 0;
           padding: 0;
+          align-self: center;
         }
 
         .status-grid-card .tile__bar-track {
