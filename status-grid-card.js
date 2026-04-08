@@ -645,7 +645,7 @@ class StatusGridCard extends HTMLElement {
 
         return `
           <div
-            class="tile"
+            class="tile ${tile.hide_bar ? "tile--no-bar" : ""}"
             data-entity="${this._escapeHtml(tile.entity || "")}"
             role="button"
             tabindex="0"
@@ -775,6 +775,11 @@ class StatusGridCard extends HTMLElement {
           gap: 6px;
           align-items: stretch;
           flex: 1;
+        }
+
+        .status-grid-card .tile.tile--no-bar .tile__content {
+          grid-template-rows: 1fr;
+          align-items: center;
         }
 
         .status-grid-card .tile__label-stack {
