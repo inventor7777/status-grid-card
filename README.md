@@ -72,7 +72,7 @@ tiles:
   - `2` = 2 x 2 grid
   - `4` = one horizontal row
 - `stack_on_small_screens` forces a single-column layout at `480px` wide and below, regardless of the selected widget layout.
-- `section_rows` controls how tall the card is in Home Assistant Sections view. This is separate from `tile_columns`, so you can keep the internal layout on `auto` or any fixed mode while choosing the outer card height explicitly.
+- In Home Assistant Sections view, the card now uses a native default footprint and fills whatever height you set with HA's own resize control.
 - Each tile can choose a `profile` such as `cpu`, `memory`, `disk`, `temperature`, `power`, `network`, `fan`, `time`, `voltage`, `battery`, `humidity`, `energy`, `dbm`, or `custom`.
 - Each tile can optionally define an `icon` using any MDI icon, and the visual editor now uses HA's native icon selector.
 - `unit` overrides the main entity unit, and `sub_unit` does the same for the sub-info entity.
