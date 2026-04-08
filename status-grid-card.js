@@ -258,24 +258,12 @@ class StatusGridCard extends HTMLElement {
 
   _applyCenteredGridLayout(grid) {
     grid.style.gridTemplateRows = "";
-    grid.style.alignContent = "start";
+    grid.style.alignContent = "center";
   }
 
   _applyStretchedGridLayout(grid, rows, rowHeight) {
     grid.style.gridTemplateRows = `repeat(${rows}, minmax(0, ${rowHeight}px))`;
     grid.style.alignContent = "stretch";
-  }
-
-  _applyCenteredWrapLayout(wrap) {
-    const hasTitle = Boolean(wrap.querySelector(".title"));
-    wrap.style.gridTemplateRows = hasTitle ? "auto auto" : "auto";
-    wrap.style.alignContent = "center";
-  }
-
-  _applyStretchedWrapLayout(wrap) {
-    const hasTitle = Boolean(wrap.querySelector(".title"));
-    wrap.style.gridTemplateRows = hasTitle ? "auto minmax(0, 1fr)" : "minmax(0, 1fr)";
-    wrap.style.alignContent = "stretch";
   }
 
   _syncDynamicLayout() {
@@ -285,7 +273,6 @@ class StatusGridCard extends HTMLElement {
 
     if (!card || !wrap || !grid) return;
 
-    this._applyCenteredWrapLayout(wrap);
     this._applyCenteredGridLayout(grid);
 
     const tileCount = this._normalizeTileCount(this._config?.tile_count);
@@ -302,7 +289,6 @@ class StatusGridCard extends HTMLElement {
       return;
     }
 
-    this._applyStretchedWrapLayout(wrap);
     const rowHeight = (availableGridHeight - (gridGap * (rows - 1))) / rows;
     if (!Number.isFinite(rowHeight) || rowHeight <= 0) return;
 
