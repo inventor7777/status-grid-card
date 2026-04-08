@@ -782,6 +782,15 @@ class StatusGridCard extends HTMLElement {
           align-items: center;
         }
 
+        .status-grid-card .tile.tile--no-bar .tile__label-stack {
+          grid-row: 1;
+          align-self: center;
+        }
+
+        .status-grid-card .tile.tile--no-bar .tile__value-row {
+          align-self: center;
+        }
+
         .status-grid-card .tile__label-stack {
           display: flex;
           flex-direction: column;
