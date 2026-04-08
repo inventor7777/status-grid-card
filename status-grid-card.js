@@ -546,7 +546,11 @@ class StatusGridCard extends HTMLElement {
 
         .status-grid-card .tile {
           border: 1px solid var(--divider-color);
-          background: rgba(var(--rgb-primary-text-color, 255, 255, 255), 0.07);
+          background: color-mix(
+            in srgb,
+            var(--ha-card-background, var(--card-background-color)) 88%,
+            var(--primary-text-color) 12%
+          );
           color: inherit;
           text-align: left;
           padding: 8px;
@@ -555,7 +559,7 @@ class StatusGridCard extends HTMLElement {
           display: flex;
           flex-direction: column;
           justify-content: space-between;
-          min-height: 55px;
+          min-height: 58px;
           transition: transform 0.1s ease;
         }
 
@@ -665,7 +669,7 @@ class StatusGridCard extends HTMLElement {
           }
 
           .status-grid-card .tile {
-            min-height: 53px;
+            min-height: 56px;
             padding: 8px;
           }
 
