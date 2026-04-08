@@ -72,6 +72,7 @@ tiles:
   - `2` = 2 x 2 grid
   - `4` = one horizontal row
 - `stack_on_small_screens` forces a single-column layout at `480px` wide and below, regardless of the selected widget layout.
+- `fill_height` lets the card stretch to fill extra height allocated by Home Assistant while keeping the default auto-sized behavior when disabled.
 - Each tile can choose a `profile` such as `cpu`, `memory`, `disk`, `temperature`, `power`, `network`, `fan`, `time`, `voltage`, `battery`, `humidity`, `energy`, `dbm`, or `custom`.
 - Each tile can optionally define an `icon` using any MDI icon, and the visual editor now uses HA's native icon selector.
 - `unit` overrides the main entity unit, and `sub_unit` does the same for the sub-info entity.

@@ -84,6 +84,7 @@ class StatusGridCard extends HTMLElement {
       tile_count: DEFAULT_TILE_COUNT,
       tile_columns: DEFAULT_TILE_COLUMNS,
       stack_on_small_screens: false,
+      fill_height: false,
       colors: { ...DEFAULT_STATUS_COLORS },
       tiles: Array.from({ length: DEFAULT_TILE_COUNT }, (_, index) => getDefaultTile(index)),
     };
@@ -98,6 +99,7 @@ class StatusGridCard extends HTMLElement {
       tile_count: tileCount,
       tile_columns: this._normalizeTileColumns(config?.tile_columns),
       stack_on_small_screens: Boolean(config?.stack_on_small_screens),
+      fill_height: Boolean(config?.fill_height),
       colors: this._normalizeColors(config?.colors),
       tiles: this._buildTiles(config?.tiles, tileCount),
     };
@@ -430,6 +432,7 @@ class StatusGridCard extends HTMLElement {
     const gridColumns = this._normalizeTileColumns(this._config.tile_columns);
     const isAutoLayout = gridColumns === AUTO_TILE_COLUMNS;
     const stackOnSmallScreens = Boolean(this._config.stack_on_small_screens);
+    const fillHeight = Boolean(this._config.fill_height);
     const title = this._renderedTitle ?? this._config.title ?? "";
     const trimmedTitle = String(title).trim();
     const titleHtml = trimmedTitle
@@ -496,7 +499,7 @@ class StatusGridCard extends HTMLElement {
       .join("");
 
     this.innerHTML = `
-      <div class="status-grid-card">
+      <div class="status-grid-card ${fillHeight ? "status-grid-card--fill-height" : ""}">
         <ha-card>
           <div class="wrap">
             ${titleHtml}
@@ -514,6 +517,13 @@ class StatusGridCard extends HTMLElement {
           border-style: solid;
           border-color: var(--ha-card-border-color, var(--divider-color));
           color: var(--primary-text-color);
+        }
+
+        .status-grid-card.status-grid-card--fill-height,
+        .status-grid-card.status-grid-card--fill-height ha-card,
+        .status-grid-card.status-grid-card--fill-height .wrap,
+        .status-grid-card.status-grid-card--fill-height .grid {
+          height: 100%;
         }
 
         .status-grid-card .wrap {
@@ -540,6 +550,15 @@ class StatusGridCard extends HTMLElement {
           align-items: stretch;
         }
 
+        .status-grid-card.status-grid-card--fill-height .wrap {
+          grid-template-rows: auto minmax(0, 1fr);
+        }
+
+        .status-grid-card.status-grid-card--fill-height .grid {
+          align-content: stretch;
+          grid-auto-rows: minmax(0, 1fr);
+        }
+
         .status-grid-card .grid.grid--auto {
           grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
         }
@@ -557,6 +576,10 @@ class StatusGridCard extends HTMLElement {
           justify-content: space-between;
           min-height: 50px;
           transition: transform 0.1s ease;
+        }
+
+        .status-grid-card.status-grid-card--fill-height .tile {
+          height: 100%;
         }
 
         .status-grid-card .tile:focus-visible {
@@ -724,6 +747,7 @@ class StatusGridCardEditor extends HTMLElement {
       tile_count: tileCount,
       tile_columns: this._normalizeTileColumns(config?.tile_columns),
       stack_on_small_screens: Boolean(config?.stack_on_small_screens),
+      fill_height: Boolean(config?.fill_height),
       colors: {
         ...DEFAULT_STATUS_COLORS,
         ...(config?.colors || {}),
@@ -819,6 +843,11 @@ class StatusGridCardEditor extends HTMLElement {
     this._emitConfig();
   }
 
+  _updateFillHeight(value) {
+    this._config = { ...this._config, fill_height: Boolean(value) };
+    this._emitConfig();
+  }
+
   _updateColor(key, value) {
     const colors = {
       ...DEFAULT_STATUS_COLORS,
@@ -880,6 +909,7 @@ class StatusGridCardEditor extends HTMLElement {
         <ha-selector id="tile_count"></ha-selector>
         <ha-selector id="tile_columns"></ha-selector>
         <ha-selector id="stack_on_small_screens"></ha-selector>
+        <ha-selector id="fill_height"></ha-selector>
         <div class="editor-section">
           <div class="editor-section__title">COLORS</div>
           <label class="editor-color">
@@ -1024,6 +1054,7 @@ class StatusGridCardEditor extends HTMLElement {
     this._elements.tileCount = this.querySelector("#tile_count");
     this._elements.tileColumns = this.querySelector("#tile_columns");
     this._elements.stackOnSmallScreens = this.querySelector("#stack_on_small_screens");
+    this._elements.fillHeight = this.querySelector("#fill_height");
     this._elements.colorGood = this.querySelector("#color_good");
     this._elements.colorWarn = this.querySelector("#color_warn");
     this._elements.colorBad = this.querySelector("#color_bad");
@@ -1056,6 +1087,8 @@ class StatusGridCardEditor extends HTMLElement {
 
     this._elements.stackOnSmallScreens.selector = { boolean: {} };
     this._elements.stackOnSmallScreens.label = "Stack on small screens";
+    this._elements.fillHeight.selector = { boolean: {} };
+    this._elements.fillHeight.label = "Fill available height";
     this._configureSelectors();
 
     const handleTileCountChange = (event) => {
@@ -1070,9 +1103,14 @@ class StatusGridCardEditor extends HTMLElement {
       this._updateStackOnSmallScreens(this._getEventValue(event));
     };
 
+    const handleFillHeightChange = (event) => {
+      this._updateFillHeight(this._getEventValue(event));
+    };
+
     this._elements.tileCount?.addEventListener("value-changed", handleTileCountChange);
     this._elements.tileColumns?.addEventListener("value-changed", handleTileColumnsChange);
     this._elements.stackOnSmallScreens?.addEventListener("value-changed", handleStackOnSmallScreensChange);
+    this._elements.fillHeight?.addEventListener("value-changed", handleFillHeightChange);
 
     this._elements.colorGood?.addEventListener("input", (event) => {
       this._updateColor("good", event.target.value);
@@ -1244,6 +1282,10 @@ class StatusGridCardEditor extends HTMLElement {
       this._elements.stackOnSmallScreens.hass = this._hass;
     }
 
+    if (this._elements.fillHeight) {
+      this._elements.fillHeight.hass = this._hass;
+    }
+
     this._elements.fields?.forEach((field) => {
       field.hass = this._hass;
     });
@@ -1277,6 +1319,13 @@ class StatusGridCardEditor extends HTMLElement {
       && this._elements.stackOnSmallScreens.value !== Boolean(this._config.stack_on_small_screens)
     ) {
       this._elements.stackOnSmallScreens.value = Boolean(this._config.stack_on_small_screens);
+    }
+
+    if (
+      this._elements.fillHeight
+      && this._elements.fillHeight.value !== Boolean(this._config.fill_height)
+    ) {
+      this._elements.fillHeight.value = Boolean(this._config.fill_height);
     }
 
     const colors = {
