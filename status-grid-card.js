@@ -1414,13 +1414,13 @@ class StatusGridCardEditor extends HTMLElement {
 
     this.querySelectorAll('ha-selector[data-selector-type="entity"]').forEach((field) => {
       field.selector = { entity: {} };
-      field.label = "Entity";
+      field.label = "";
       field.required = true;
     });
 
     this.querySelectorAll('ha-selector[data-selector-type="sub_entity"]').forEach((field) => {
       field.selector = { entity: {} };
-      field.label = "Sub info entity";
+      field.label = "Entity";
       field.required = false;
       field.clearable = true;
     });
