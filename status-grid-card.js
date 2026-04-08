@@ -73,6 +73,8 @@ class StatusGridCard extends HTMLElement {
     this._renderedTitle = undefined;
     this._titleUnsubscribe = undefined;
     this._titleRequestId = 0;
+    this._resizeObserver = undefined;
+    this._layoutFrame = undefined;
   }
 
   static getConfigElement() {
@@ -100,7 +102,7 @@ class StatusGridCard extends HTMLElement {
       title: config?.title ?? "",
       tile_count: tileCount,
       tile_columns: this._normalizeTileColumns(config?.tile_columns),
-      section_rows: this._normalizeSectionRows(config?.section_rows, config?.fill_height),
+      section_rows: this._normalizeSectionRows(config?.section_rows),
       stack_on_small_screens: Boolean(config?.stack_on_small_screens),
       colors: this._normalizeColors(config?.colors),
       tiles: this._buildTiles(config?.tiles, tileCount),
@@ -119,11 +121,18 @@ class StatusGridCard extends HTMLElement {
 
   connectedCallback() {
     this.render();
+    this._ensureResizeObserver();
     this._updateTitleTemplate();
   }
 
   disconnectedCallback() {
     this._clearTitleTemplate();
+    this._resizeObserver?.disconnect();
+    this._resizeObserver = undefined;
+    if (this._layoutFrame) {
+      cancelAnimationFrame(this._layoutFrame);
+      this._layoutFrame = undefined;
+    }
   }
 
   getCardSize() {
@@ -132,7 +141,7 @@ class StatusGridCard extends HTMLElement {
 
   getGridOptions() {
     const gridColumns = this._normalizeTileColumns(this._config?.tile_columns);
-    const rows = this._normalizeSectionRows(this._config?.section_rows, this._config?.fill_height);
+    const rows = this._normalizeSectionRows(this._config?.section_rows);
     const columns = gridColumns === 1 ? 3 : gridColumns === 4 ? 12 : 6;
 
     return {
@@ -158,10 +167,81 @@ class StatusGridCard extends HTMLElement {
     return DEFAULT_TILE_COUNT;
   }
 
-  _normalizeSectionRows(value, legacyFillHeight = false) {
+  _normalizeSectionRows(value) {
     const num = Number(value);
     if (VALID_SECTION_ROWS.includes(num)) return num;
-    return legacyFillHeight ? 4 : DEFAULT_SECTION_ROWS;
+    return DEFAULT_SECTION_ROWS;
+  }
+
+  _ensureResizeObserver() {
+    if (this._resizeObserver) return;
+
+    this._resizeObserver = new ResizeObserver(() => {
+      this._scheduleDynamicLayout();
+    });
+    this._resizeObserver.observe(this);
+  }
+
+  _scheduleDynamicLayout() {
+    if (this._layoutFrame) return;
+
+    this._layoutFrame = requestAnimationFrame(() => {
+      this._layoutFrame = undefined;
+      this._syncDynamicLayout();
+    });
+  }
+
+  _getRenderedColumnCount(grid) {
+    const computed = getComputedStyle(grid);
+    const template = computed.gridTemplateColumns.trim();
+    if (!template || template === "none") return 1;
+
+    const columns = template
+      .split(/\s+/)
+      .filter((segment) => segment && !segment.startsWith("["));
+
+    return Math.max(1, columns.length);
+  }
+
+  _syncDynamicLayout() {
+    const card = this.querySelector("ha-card");
+    const wrap = this.querySelector(".wrap");
+    const grid = this.querySelector(".grid");
+
+    if (!card || !wrap || !grid) return;
+
+    grid.style.gridTemplateRows = "";
+    grid.style.alignContent = "";
+
+    const tileCount = this._normalizeTileCount(this._config?.tile_count);
+    if (!tileCount) return;
+
+    const columns = this._getRenderedColumnCount(grid);
+    const rows = Math.max(1, Math.ceil(tileCount / columns));
+    const cardHeight = card.clientHeight;
+    const naturalGridHeight = grid.scrollHeight;
+
+    if (!cardHeight || !naturalGridHeight) return;
+
+    const wrapStyle = getComputedStyle(wrap);
+    const wrapGap = parseFloat(wrapStyle.rowGap || wrapStyle.gap || "0") || 0;
+    const paddingTop = parseFloat(wrapStyle.paddingTop || "0") || 0;
+    const paddingBottom = parseFloat(wrapStyle.paddingBottom || "0") || 0;
+    const titleEl = wrap.querySelector(".title");
+    const titleHeight = titleEl ? titleEl.getBoundingClientRect().height : 0;
+    const gridGap = parseFloat(getComputedStyle(grid).rowGap || "0") || 0;
+    const titleGap = titleEl ? wrapGap : 0;
+    const availableGridHeight = cardHeight - paddingTop - paddingBottom - titleHeight - titleGap;
+
+    if (availableGridHeight <= naturalGridHeight + 2) {
+      return;
+    }
+
+    const rowHeight = (availableGridHeight - (gridGap * (rows - 1))) / rows;
+    if (!Number.isFinite(rowHeight) || rowHeight <= 0) return;
+
+    grid.style.gridTemplateRows = `repeat(${rows}, minmax(0, ${rowHeight}px))`;
+    grid.style.alignContent = "stretch";
   }
 
   _normalizeColors(colors) {
@@ -462,8 +542,8 @@ class StatusGridCard extends HTMLElement {
       : "";
 
     this.style.display = "block";
-    this.style.height = "";
-    this.style.minHeight = "";
+    this.style.height = "100%";
+    this.style.minHeight = "0";
 
     const tilesHtml = this._config.tiles
       .map((rawTile) => {
@@ -527,7 +607,7 @@ class StatusGridCard extends HTMLElement {
     this.innerHTML = `
       <div class="status-grid-card">
         <ha-card>
-          <div class="wrap">
+          <div class="wrap ${trimmedTitle ? "wrap--with-title" : ""}">
             ${titleHtml}
             <div class="grid ${isAutoLayout ? "grid--auto" : ""} ${stackOnSmallScreens ? "grid--stack-small" : ""}" ${isAutoLayout ? "" : `style="--tile-columns:${gridColumns};"`}>${tilesHtml}</div>
           </div>
@@ -543,15 +623,20 @@ class StatusGridCard extends HTMLElement {
           border-style: solid;
           border-color: var(--ha-card-border-color, var(--divider-color));
           color: var(--primary-text-color);
+          height: 100%;
         }
 
         .status-grid-card .wrap {
-          min-height: 0;
+          min-height: 100%;
           padding: 8px;
           box-sizing: border-box;
           display: grid;
           gap: 6px;
-          align-content: start;
+          align-content: stretch;
+        }
+
+        .status-grid-card .wrap.wrap--with-title {
+          grid-template-rows: auto minmax(0, 1fr);
         }
 
         .status-grid-card .title {
@@ -567,6 +652,8 @@ class StatusGridCard extends HTMLElement {
           grid-template-columns: repeat(var(--tile-columns), minmax(0, 1fr));
           gap: 8px;
           align-items: stretch;
+          min-height: 0;
+          align-content: start;
         }
 
         .status-grid-card .grid.grid--auto {
@@ -734,6 +821,9 @@ class StatusGridCard extends HTMLElement {
         this._openMoreInfo(subEl.dataset.subEntity);
       });
     });
+
+    this._ensureResizeObserver();
+    this._scheduleDynamicLayout();
   }
 }
 
@@ -752,7 +842,7 @@ class StatusGridCardEditor extends HTMLElement {
       title: config?.title ?? "",
       tile_count: tileCount,
       tile_columns: this._normalizeTileColumns(config?.tile_columns),
-      section_rows: this._normalizeSectionRows(config?.section_rows, config?.fill_height),
+      section_rows: this._normalizeSectionRows(config?.section_rows),
       stack_on_small_screens: Boolean(config?.stack_on_small_screens),
       colors: {
         ...DEFAULT_STATUS_COLORS,
@@ -1167,10 +1257,10 @@ class StatusGridCardEditor extends HTMLElement {
     return DEFAULT_TILE_COUNT;
   }
 
-  _normalizeSectionRows(value, legacyFillHeight = false) {
+  _normalizeSectionRows(value) {
     const num = Number(value);
     if (VALID_SECTION_ROWS.includes(num)) return num;
-    return legacyFillHeight ? 4 : DEFAULT_SECTION_ROWS;
+    return DEFAULT_SECTION_ROWS;
   }
 
   _normalizeProfile(value) {
