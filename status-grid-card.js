@@ -256,28 +256,26 @@ class StatusGridCard extends HTMLElement {
     return card.clientHeight - paddingTop - paddingBottom - titleHeight - titleGap;
   }
 
-  _getTitleMetrics(wrap) {
-    const wrapStyle = getComputedStyle(wrap);
-    const wrapGap = parseFloat(wrapStyle.rowGap || wrapStyle.gap || "0") || 0;
-    const titleEl = wrap.querySelector(".title");
-    const titleHeight = titleEl ? titleEl.getBoundingClientRect().height : 0;
-    const titleGap = titleEl ? wrapGap : 0;
-
-    return {
-      titleHeight,
-      titleGap,
-      totalOffset: titleHeight + titleGap,
-    };
-  }
-
   _applyCenteredGridLayout(grid) {
     grid.style.gridTemplateRows = "";
-    grid.style.alignContent = "center";
+    grid.style.alignContent = "start";
   }
 
   _applyStretchedGridLayout(grid, rows, rowHeight) {
     grid.style.gridTemplateRows = `repeat(${rows}, minmax(0, ${rowHeight}px))`;
     grid.style.alignContent = "stretch";
+  }
+
+  _applyCenteredWrapLayout(wrap) {
+    const hasTitle = Boolean(wrap.querySelector(".title"));
+    wrap.style.gridTemplateRows = hasTitle ? "auto auto" : "auto";
+    wrap.style.alignContent = "center";
+  }
+
+  _applyStretchedWrapLayout(wrap) {
+    const hasTitle = Boolean(wrap.querySelector(".title"));
+    wrap.style.gridTemplateRows = hasTitle ? "auto minmax(0, 1fr)" : "minmax(0, 1fr)";
+    wrap.style.alignContent = "stretch";
   }
 
   _syncDynamicLayout() {
@@ -287,6 +285,7 @@ class StatusGridCard extends HTMLElement {
 
     if (!card || !wrap || !grid) return;
 
+    this._applyCenteredWrapLayout(wrap);
     this._applyCenteredGridLayout(grid);
 
     const tileCount = this._normalizeTileCount(this._config?.tile_count);
@@ -295,20 +294,16 @@ class StatusGridCard extends HTMLElement {
     const { rows } = this._getTileRowCount(grid, tileCount);
     const naturalGridHeight = this._getNaturalGridHeight(grid);
     const availableGridHeight = this._getAvailableGridHeight(card, wrap);
-    const titleMetrics = this._getTitleMetrics(wrap);
     const gridGap = parseFloat(getComputedStyle(grid).rowGap || "0") || 0;
-    const extraHeight = availableGridHeight - naturalGridHeight;
-    const centerOffset = Math.max(0, Math.min(extraHeight, titleMetrics.totalOffset));
 
     if (!availableGridHeight || !naturalGridHeight) return;
-
-    grid.style.paddingBottom = centerOffset > 0 ? `${centerOffset}px` : "";
 
     if (availableGridHeight <= naturalGridHeight + 2) {
       return;
     }
 
-    const rowHeight = (availableGridHeight - centerOffset - (gridGap * (rows - 1))) / rows;
+    this._applyStretchedWrapLayout(wrap);
+    const rowHeight = (availableGridHeight - (gridGap * (rows - 1))) / rows;
     if (!Number.isFinite(rowHeight) || rowHeight <= 0) return;
 
     this._applyStretchedGridLayout(grid, rows, rowHeight);
