@@ -5,7 +5,7 @@ const DEFAULT_TILES = [
   { key: "Tile_4", profile: "disk", name: "Disk", entity: "", unit: "%", sub_entity: "", sub_unit: "", icon: "mdi:harddisk" },
 ];
 
-const CARD_VERSION = "2026.04.08-2";
+const CARD_VERSION = "2026.04.08-3";
 const DEFAULT_TILE_COLUMNS = 2;
 const AUTO_TILE_COLUMNS = "auto";
 const VALID_TILE_COLUMNS = [1, 2, 4, AUTO_TILE_COLUMNS];
@@ -790,7 +790,7 @@ class StatusGridCard extends HTMLElement {
         .status-grid-card .tile.tile--no-bar .tile__value-row {
           align-self: center;
           padding-block: 0;
-          transform: translateY(8px);
+          transform: translateY(2px);
         }
 
         .status-grid-card .tile__label-stack {
