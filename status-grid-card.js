@@ -51,6 +51,7 @@ const DEFAULT_STATUS_COLORS = {
 
 const EDITOR_FIELD_VISIBILITY = {
   unit: (profile) => profile?.accepts_text_state !== false,
+  bar_min: (_profile, tile) => ["custom", "dbm"].includes(String(tile?.profile || "").trim().toLowerCase()),
   bar_max: (profile) => profile?.supports_bar !== false,
   warn_threshold: (profile) => Boolean(profile?.supports_custom_thresholds),
   bad_threshold: (profile) => Boolean(profile?.supports_custom_thresholds),
@@ -385,10 +386,11 @@ class StatusGridCard extends HTMLElement {
     const thresholdsPct = profile.thresholds_pct;
     const warnOverride = Number(tile?.warn_threshold);
     const badOverride = Number(tile?.bad_threshold);
+    const allowThresholdInversion = Boolean(profile?.supports_threshold_inversion);
 
     if (thresholds) {
       const isProfileLowDirection = thresholds.direction === "low";
-      const isInverted = Boolean(tile?.invert_thresholds);
+      const isInverted = allowThresholdInversion && Boolean(tile?.invert_thresholds);
       const warn = Number.isFinite(warnOverride) ? warnOverride : thresholds.warn;
       const bad = Number.isFinite(badOverride) ? badOverride : thresholds.bad;
       return {
@@ -406,7 +408,7 @@ class StatusGridCard extends HTMLElement {
 
     const span = range.max - range.min;
     const isProfileLowDirection = thresholdsPct.direction === "low";
-    const isInverted = Boolean(tile?.invert_thresholds);
+    const isInverted = allowThresholdInversion && Boolean(tile?.invert_thresholds);
     const effectiveDirection = isInverted
       ? (isProfileLowDirection ? undefined : "low")
       : thresholdsPct.direction;
@@ -1012,6 +1014,10 @@ class StatusGridCardEditor extends HTMLElement {
         nextTile.bar_max = nextProfile.bar_max ?? "";
       }
 
+      if (!nextProfile.supports_threshold_inversion) {
+        nextTile.invert_thresholds = false;
+      }
+
       nextTile.warn_threshold = thresholdDefaults.warn_threshold;
       nextTile.bad_threshold = thresholdDefaults.bad_threshold;
     }
@@ -1019,6 +1025,7 @@ class StatusGridCardEditor extends HTMLElement {
     tiles[index] = this._normalizeTile(nextTile, getDefaultTile(index));
     this._config = { ...this._config, tiles };
     this._emitConfig();
+    this._syncValues();
   }
 
   _updateTileCount(value) {
@@ -1142,6 +1149,7 @@ class StatusGridCardEditor extends HTMLElement {
               </div>
               <div class="editor-group">
                 <div class="editor-group__title">Tile</div>
+                <div data-index="${index}" data-field-wrap="bar_min"><ha-textfield data-index="${index}" data-field="bar_min" label="Bar min"></ha-textfield></div>
                 <div data-index="${index}" data-field-wrap="bar_max"><ha-textfield data-index="${index}" data-field="bar_max" label="Bar max"></ha-textfield></div>
                 <div data-index="${index}" data-field-wrap="warn_threshold"><ha-textfield data-index="${index}" data-field="warn_threshold" label="Warning threshold"></ha-textfield></div>
                 <div data-index="${index}" data-field-wrap="bad_threshold"><ha-textfield data-index="${index}" data-field="bad_threshold" label="Critical threshold"></ha-textfield></div>
