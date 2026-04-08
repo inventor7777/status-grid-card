@@ -17,18 +17,18 @@ const INVALID_STATE_VALUES = ["unknown", "unavailable", "None", null, undefined]
 const DEFAULT_PROFILE = "custom";
 
 const TILE_PROFILES = {
-  cpu: { name: "CPU", icon: "mdi:chip", unit: "%", thresholds_pct: { warn: 70, bad: 90 }, bar_max: 100, supports_bar: true, supports_threshold_inversion: true },
-  memory: { name: "Memory", icon: "mdi:memory", unit: "%", thresholds_pct: { warn: 75, bad: 90 }, bar_max: 100, supports_bar: true, supports_threshold_inversion: true },
-  disk: { name: "Disk", icon: "mdi:harddisk", unit: "%", thresholds_pct: { warn: 70, bad: 90 }, bar_max: 100, supports_bar: true, supports_threshold_inversion: true },
-  temperature: { name: "Temp", icon: "mdi:thermometer", unit: "", thresholds_pct: { warn: 65, bad: 80 }, bar_max: 100, supports_bar: true, supports_threshold_inversion: true },
-  power: { name: "Power", icon: "mdi:flash", unit: "W", thresholds_pct: { warn: 70, bad: 90 }, bar_max: 100, supports_bar: true, supports_threshold_inversion: true },
-  network: { name: "Network", icon: "mdi:network", unit: "", thresholds_pct: { warn: 70, bad: 90 }, bar_max: 100, supports_bar: true, supports_threshold_inversion: true },
-  fan: { name: "Fan", icon: "mdi:fan", unit: "RPM", thresholds_pct: { warn: 70, bad: 90 }, bar_max: 100, supports_bar: true, supports_threshold_inversion: true },
-  time: { name: "Time", icon: "mdi:clock-outline", unit: "", thresholds: null, bar_max: null, supports_bar: false, supports_threshold_inversion: false, accepts_text_state: true },
-  voltage: { name: "Voltage", icon: "mdi:sine-wave", unit: "V", thresholds_pct: { warn: 70, bad: 90 }, bar_max: 100, supports_bar: true, supports_threshold_inversion: true },
-  battery: { name: "Battery", icon: "mdi:battery", unit: "%", thresholds_pct: { warn: 30, bad: 15, direction: "low" }, bar_max: 100, supports_bar: true, supports_threshold_inversion: false },
-  humidity: { name: "Humidity", icon: "mdi:water-percent", unit: "%", thresholds_pct: { warn: 70, bad: 90 }, bar_max: 100, supports_bar: true, supports_threshold_inversion: true },
-  energy: { name: "Energy", icon: "mdi:lightning-bolt", unit: "", thresholds_pct: { warn: 70, bad: 90 }, bar_max: 100, supports_bar: true, supports_threshold_inversion: true },
+  cpu: { name: "CPU", icon: "mdi:chip", unit: "%", thresholds_pct: { warn: 70, bad: 90 }, bar_max: 100, supports_bar: true, supports_threshold_inversion: true, supports_custom_thresholds: true },
+  memory: { name: "Memory", icon: "mdi:memory", unit: "%", thresholds_pct: { warn: 75, bad: 90 }, bar_max: 100, supports_bar: true, supports_threshold_inversion: true, supports_custom_thresholds: true },
+  disk: { name: "Disk", icon: "mdi:harddisk", unit: "%", thresholds_pct: { warn: 70, bad: 90 }, bar_max: 100, supports_bar: true, supports_threshold_inversion: true, supports_custom_thresholds: true },
+  temperature: { name: "Temp", icon: "mdi:thermometer", unit: "", thresholds_pct: { warn: 65, bad: 80 }, bar_max: 100, supports_bar: true, supports_threshold_inversion: true, supports_custom_thresholds: true },
+  power: { name: "Power", icon: "mdi:flash", unit: "W", thresholds_pct: { warn: 70, bad: 90 }, bar_max: 100, supports_bar: true, supports_threshold_inversion: true, supports_custom_thresholds: true },
+  network: { name: "Network", icon: "mdi:network", unit: "", thresholds_pct: { warn: 70, bad: 90 }, bar_max: 100, supports_bar: true, supports_threshold_inversion: true, supports_custom_thresholds: true },
+  fan: { name: "Fan", icon: "mdi:fan", unit: "RPM", thresholds_pct: { warn: 70, bad: 90 }, bar_max: 100, supports_bar: true, supports_threshold_inversion: true, supports_custom_thresholds: true },
+  time: { name: "Time", icon: "mdi:clock-outline", unit: "", thresholds: null, bar_max: null, supports_bar: false, supports_threshold_inversion: false, supports_custom_thresholds: false, accepts_text_state: true },
+  voltage: { name: "Voltage", icon: "mdi:sine-wave", unit: "V", thresholds_pct: { warn: 70, bad: 90 }, bar_max: 100, supports_bar: true, supports_threshold_inversion: true, supports_custom_thresholds: true },
+  battery: { name: "Battery", icon: "mdi:battery", unit: "%", thresholds_pct: { warn: 30, bad: 15, direction: "low" }, bar_max: 100, supports_bar: true, supports_threshold_inversion: false, supports_custom_thresholds: true },
+  humidity: { name: "Humidity", icon: "mdi:water-percent", unit: "%", thresholds_pct: { warn: 70, bad: 90 }, bar_max: 100, supports_bar: true, supports_threshold_inversion: true, supports_custom_thresholds: true },
+  energy: { name: "Energy", icon: "mdi:lightning-bolt", unit: "", thresholds_pct: { warn: 70, bad: 90 }, bar_max: 100, supports_bar: true, supports_threshold_inversion: true, supports_custom_thresholds: true },
   dbm: {
     name: "dBm",
     icon: "mdi:wifi",
@@ -38,8 +38,9 @@ const TILE_PROFILES = {
     bar_max: -50,
     supports_bar: true,
     supports_threshold_inversion: false,
+    supports_custom_thresholds: true,
   },
-  custom: { name: "Custom", icon: "mdi:gauge", unit: "", thresholds_pct: { warn: 70, bad: 90 }, bar_max: 100, supports_bar: true, supports_threshold_inversion: true, accepts_text_state: true },
+  custom: { name: "Custom", icon: "mdi:gauge", unit: "", thresholds_pct: { warn: 70, bad: 90 }, bar_max: 100, supports_bar: true, supports_threshold_inversion: true, supports_custom_thresholds: true, accepts_text_state: true },
 };
 
 const DEFAULT_STATUS_COLORS = {
@@ -51,9 +52,34 @@ const DEFAULT_STATUS_COLORS = {
 const EDITOR_FIELD_VISIBILITY = {
   unit: (profile) => profile?.accepts_text_state !== false,
   bar_max: (profile) => profile?.supports_bar !== false,
+  warn_threshold: (profile) => Boolean(profile?.supports_custom_thresholds),
+  bad_threshold: (profile) => Boolean(profile?.supports_custom_thresholds),
   invert_thresholds: (profile) => Boolean(profile?.supports_threshold_inversion),
   hide_bar: (profile) => profile?.supports_bar !== false,
 };
+
+function getProfileThresholdDefaults(profile) {
+  const resolvedProfile = TILE_PROFILES[profile] || TILE_PROFILES[DEFAULT_PROFILE];
+
+  if (resolvedProfile.thresholds) {
+    return {
+      warn_threshold: resolvedProfile.thresholds.warn,
+      bad_threshold: resolvedProfile.thresholds.bad,
+    };
+  }
+
+  if (resolvedProfile.thresholds_pct) {
+    return {
+      warn_threshold: resolvedProfile.thresholds_pct.warn,
+      bad_threshold: resolvedProfile.thresholds_pct.bad,
+    };
+  }
+
+  return {
+    warn_threshold: "",
+    bad_threshold: "",
+  };
+}
 
 function getDefaultTile(index) {
   if (index < DEFAULT_TILES.length) {
@@ -305,6 +331,7 @@ class StatusGridCard extends HTMLElement {
     };
     const profile = this._normalizeProfile(mergedTile.profile || this._getLegacyProfile(mergedTile));
     const defaults = TILE_PROFILES[profile] || TILE_PROFILES[DEFAULT_PROFILE];
+    const thresholdDefaults = getProfileThresholdDefaults(profile);
 
     return {
       ...mergedTile,
@@ -314,6 +341,8 @@ class StatusGridCard extends HTMLElement {
       unit: Object.hasOwn(explicitTile, "unit") ? explicitTile.unit : (defaults.unit ?? ""),
       bar_min: Object.hasOwn(explicitTile, "bar_min") ? explicitTile.bar_min : (defaults.bar_min ?? ""),
       bar_max: Object.hasOwn(explicitTile, "bar_max") ? explicitTile.bar_max : (defaults.bar_max ?? ""),
+      warn_threshold: Object.hasOwn(explicitTile, "warn_threshold") ? explicitTile.warn_threshold : thresholdDefaults.warn_threshold,
+      bad_threshold: Object.hasOwn(explicitTile, "bad_threshold") ? explicitTile.bad_threshold : thresholdDefaults.bad_threshold,
       invert_thresholds: Boolean(mergedTile.invert_thresholds),
       hide_bar: Boolean(mergedTile.hide_bar),
     };
@@ -354,13 +383,17 @@ class StatusGridCard extends HTMLElement {
     const range = this._getBarRange(tile);
     const thresholds = profile.thresholds;
     const thresholdsPct = profile.thresholds_pct;
+    const warnOverride = Number(tile?.warn_threshold);
+    const badOverride = Number(tile?.bad_threshold);
 
     if (thresholds) {
       const isProfileLowDirection = thresholds.direction === "low";
       const isInverted = Boolean(tile?.invert_thresholds);
+      const warn = Number.isFinite(warnOverride) ? warnOverride : thresholds.warn;
+      const bad = Number.isFinite(badOverride) ? badOverride : thresholds.bad;
       return {
-        warn: isInverted ? thresholds.bad : thresholds.warn,
-        bad: isInverted ? thresholds.warn : thresholds.bad,
+        warn: isInverted ? bad : warn,
+        bad: isInverted ? warn : bad,
         direction: isInverted
           ? (isProfileLowDirection ? undefined : "low")
           : thresholds.direction,
@@ -377,12 +410,14 @@ class StatusGridCard extends HTMLElement {
     const effectiveDirection = isInverted
       ? (isProfileLowDirection ? undefined : "low")
       : thresholdsPct.direction;
+    const warnPct = Number.isFinite(warnOverride) ? warnOverride : thresholdsPct.warn;
+    const badPct = Number.isFinite(badOverride) ? badOverride : thresholdsPct.bad;
     const effectiveWarnPct = isInverted && !isProfileLowDirection
-      ? 100 - thresholdsPct.warn
-      : thresholdsPct.warn;
+      ? 100 - warnPct
+      : warnPct;
     const effectiveBadPct = isInverted && !isProfileLowDirection
-      ? 100 - thresholdsPct.bad
-      : thresholdsPct.bad;
+      ? 100 - badPct
+      : badPct;
 
     return {
       warn: range.min + (span * effectiveWarnPct) / 100,
@@ -940,6 +975,7 @@ class StatusGridCardEditor extends HTMLElement {
     if (field === "profile") {
       const previousProfile = TILE_PROFILES[this._normalizeProfile(tiles[index]?.profile)] || TILE_PROFILES[DEFAULT_PROFILE];
       const nextProfile = TILE_PROFILES[this._normalizeProfile(value)] || TILE_PROFILES[DEFAULT_PROFILE];
+      const thresholdDefaults = getProfileThresholdDefaults(this._normalizeProfile(value));
 
       if (!tiles[index]?.name || tiles[index].name === previousProfile.name) {
         nextTile.name = nextProfile.name || "";
@@ -960,6 +996,9 @@ class StatusGridCardEditor extends HTMLElement {
       if ((tiles[index]?.bar_max ?? "") === (previousProfile.bar_max ?? "")) {
         nextTile.bar_max = nextProfile.bar_max ?? "";
       }
+
+      nextTile.warn_threshold = thresholdDefaults.warn_threshold;
+      nextTile.bad_threshold = thresholdDefaults.bad_threshold;
     }
 
     tiles[index] = this._normalizeTile(nextTile, getDefaultTile(index));
@@ -1089,6 +1128,8 @@ class StatusGridCardEditor extends HTMLElement {
               <div class="editor-group">
                 <div class="editor-group__title">Tile</div>
                 <div data-index="${index}" data-field-wrap="bar_max"><ha-textfield data-index="${index}" data-field="bar_max" label="Bar max"></ha-textfield></div>
+                <div data-index="${index}" data-field-wrap="warn_threshold"><ha-textfield data-index="${index}" data-field="warn_threshold" label="Warning threshold"></ha-textfield></div>
+                <div data-index="${index}" data-field-wrap="bad_threshold"><ha-textfield data-index="${index}" data-field="bad_threshold" label="Critical threshold"></ha-textfield></div>
                 <div data-index="${index}" data-field-wrap="invert_thresholds"><ha-selector data-index="${index}" data-field="invert_thresholds" data-selector-type="invert_thresholds"></ha-selector></div>
                 <div data-index="${index}" data-field-wrap="hide_bar"><ha-selector data-index="${index}" data-field="hide_bar" data-selector-type="hide_bar"></ha-selector></div>
               </div>
@@ -1339,6 +1380,7 @@ class StatusGridCardEditor extends HTMLElement {
     };
     const profile = this._normalizeProfile(mergedTile.profile || this._getLegacyProfile(mergedTile));
     const defaults = TILE_PROFILES[profile] || TILE_PROFILES[DEFAULT_PROFILE];
+    const thresholdDefaults = getProfileThresholdDefaults(profile);
 
     return {
       ...mergedTile,
@@ -1348,6 +1390,8 @@ class StatusGridCardEditor extends HTMLElement {
       unit: Object.hasOwn(explicitTile, "unit") ? explicitTile.unit : (defaults.unit ?? ""),
       bar_min: Object.hasOwn(explicitTile, "bar_min") ? explicitTile.bar_min : (defaults.bar_min ?? ""),
       bar_max: Object.hasOwn(explicitTile, "bar_max") ? explicitTile.bar_max : (defaults.bar_max ?? ""),
+      warn_threshold: Object.hasOwn(explicitTile, "warn_threshold") ? explicitTile.warn_threshold : thresholdDefaults.warn_threshold,
+      bad_threshold: Object.hasOwn(explicitTile, "bad_threshold") ? explicitTile.bad_threshold : thresholdDefaults.bad_threshold,
       invert_thresholds: Boolean(mergedTile.invert_thresholds),
       hide_bar: Boolean(mergedTile.hide_bar),
     };
