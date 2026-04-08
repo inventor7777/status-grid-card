@@ -149,7 +149,7 @@ class StatusGridCard extends HTMLElement {
 
     return {
       rows,
-      min_rows: rows,
+      min_rows: 2,
       columns,
       min_columns: 3,
       max_columns: 12,
