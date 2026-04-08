@@ -556,7 +556,7 @@ class StatusGridCard extends HTMLElement {
 
         .status-grid-card.status-grid-card--fill-height .grid {
           align-content: stretch;
-          grid-auto-rows: minmax(0, 1fr);
+          grid-auto-rows: minmax(50px, 1fr);
         }
 
         .status-grid-card .grid.grid--auto {
@@ -579,7 +579,7 @@ class StatusGridCard extends HTMLElement {
         }
 
         .status-grid-card.status-grid-card--fill-height .tile {
-          height: 100%;
+          min-height: 0;
         }
 
         .status-grid-card .tile:focus-visible {
