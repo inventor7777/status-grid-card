@@ -201,7 +201,7 @@ class StatusGridCard extends HTMLElement {
     if (!card || !wrap || !grid) return;
 
     grid.style.gridTemplateRows = "";
-    grid.style.alignContent = "";
+    grid.style.alignContent = "center";
 
     const tileCount = this._normalizeTileCount(this._config?.tile_count);
     if (!tileCount) return;
