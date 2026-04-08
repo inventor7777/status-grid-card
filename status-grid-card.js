@@ -627,6 +627,7 @@ class StatusGridCard extends HTMLElement {
           padding: 8px;
           box-sizing: border-box;
           display: grid;
+          grid-template-rows: minmax(0, 1fr);
           gap: 6px;
           align-content: stretch;
         }
