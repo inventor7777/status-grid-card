@@ -467,6 +467,10 @@ class StatusGridCard extends HTMLElement {
       ? `<div class="title">${this._escapeHtml(trimmedTitle)}</div>`
       : "";
 
+    this.style.display = "block";
+    this.style.height = fillHeight ? "100%" : "";
+    this.style.minHeight = fillHeight ? "100%" : "";
+
     const tilesHtml = this._config.tiles
       .map((rawTile) => {
         const tile = this._normalizeTile(rawTile);
