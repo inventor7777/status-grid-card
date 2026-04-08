@@ -559,7 +559,7 @@ class StatusGridCard extends HTMLElement {
           display: flex;
           flex-direction: column;
           justify-content: space-between;
-          min-height: 58px;
+          min-height: 55px;
           transition: transform 0.1s ease;
         }
 
@@ -669,7 +669,7 @@ class StatusGridCard extends HTMLElement {
           }
 
           .status-grid-card .tile {
-            min-height: 56px;
+            min-height: 53px;
             padding: 8px;
           }
 
