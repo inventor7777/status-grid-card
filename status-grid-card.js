@@ -130,10 +130,14 @@ class StatusGridCard extends HTMLElement {
 
   getGridOptions() {
     const gridColumns = this._normalizeTileColumns(this._config?.tile_columns);
+    const tileCount = this._normalizeTileCount(this._config?.tile_count);
+    const fillHeight = Boolean(this._config?.fill_height);
     const columns = gridColumns === 1 ? 3 : gridColumns === 4 ? 12 : 6;
+    const internalColumns = gridColumns === AUTO_TILE_COLUMNS ? 2 : gridColumns;
+    const tileRows = Math.max(1, Math.ceil(tileCount / internalColumns));
 
     return {
-      rows: 2,
+      rows: fillHeight ? Math.max(2, tileRows * 2) : 2,
       min_rows: 2,
       columns,
       min_columns: 3,
@@ -446,8 +450,6 @@ class StatusGridCard extends HTMLElement {
     const isAutoLayout = gridColumns === AUTO_TILE_COLUMNS;
     const stackOnSmallScreens = Boolean(this._config.stack_on_small_screens);
     const fillHeight = Boolean(this._config.fill_height);
-    const tileCount = this._normalizeTileCount(this._config.tile_count);
-    const tileRows = isAutoLayout ? null : Math.max(1, Math.ceil(tileCount / gridColumns));
     const title = this._renderedTitle ?? this._config.title ?? "";
     const trimmedTitle = String(title).trim();
     const titleHtml = trimmedTitle
@@ -455,8 +457,8 @@ class StatusGridCard extends HTMLElement {
       : "";
 
     this.style.display = "block";
-    this.style.height = fillHeight ? "100%" : "";
-    this.style.minHeight = fillHeight ? "100%" : "";
+    this.style.height = "";
+    this.style.minHeight = "";
 
     const tilesHtml = this._config.tiles
       .map((rawTile) => {
@@ -522,7 +524,7 @@ class StatusGridCard extends HTMLElement {
         <ha-card>
           <div class="wrap">
             ${titleHtml}
-            <div class="grid ${isAutoLayout ? "grid--auto" : ""} ${fillHeight && !isAutoLayout ? "grid--fill-fixed" : ""} ${stackOnSmallScreens ? "grid--stack-small" : ""}" ${isAutoLayout ? "" : `style="--tile-columns:${gridColumns}; --tile-rows:${tileRows};"`}>${tilesHtml}</div>
+            <div class="grid ${isAutoLayout ? "grid--auto" : ""} ${stackOnSmallScreens ? "grid--stack-small" : ""}" ${isAutoLayout ? "" : `style="--tile-columns:${gridColumns};"`}>${tilesHtml}</div>
           </div>
         </ha-card>
       </div>
@@ -536,15 +538,6 @@ class StatusGridCard extends HTMLElement {
           border-style: solid;
           border-color: var(--ha-card-border-color, var(--divider-color));
           color: var(--primary-text-color);
-        }
-
-        .status-grid-card.status-grid-card--fill-height,
-        .status-grid-card.status-grid-card--fill-height ha-card {
-          min-height: 100%;
-        }
-
-        .status-grid-card.status-grid-card--fill-height ha-card {
-          display: block;
         }
 
         .status-grid-card .wrap {
@@ -569,22 +562,6 @@ class StatusGridCard extends HTMLElement {
           grid-template-columns: repeat(var(--tile-columns), minmax(0, 1fr));
           gap: 8px;
           align-items: stretch;
-        }
-
-        .status-grid-card.status-grid-card--fill-height .wrap {
-          min-height: 100%;
-          align-content: start;
-        }
-
-        .status-grid-card.status-grid-card--fill-height .grid.grid--fill-fixed {
-          height: 100%;
-          min-height: 0;
-          grid-template-rows: repeat(var(--tile-rows), minmax(0, 1fr));
-        }
-
-        .status-grid-card.status-grid-card--fill-height .grid.grid--fill-fixed .tile {
-          min-height: 0;
-          height: 100%;
         }
 
         .status-grid-card .grid.grid--auto {
