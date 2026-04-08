@@ -5,7 +5,7 @@ const DEFAULT_TILES = [
   { key: "Tile_4", profile: "disk", name: "Disk", entity: "", unit: "%", sub_entity: "", sub_unit: "", icon: "mdi:harddisk" },
 ];
 
-const CARD_VERSION = "2026.04.07-1";
+const CARD_VERSION = "2026.04.08-1";
 const DEFAULT_TILE_COLUMNS = 2;
 const AUTO_TILE_COLUMNS = "auto";
 const VALID_TILE_COLUMNS = [1, 2, 4, AUTO_TILE_COLUMNS];
@@ -17,18 +17,18 @@ const INVALID_STATE_VALUES = ["unknown", "unavailable", "None", null, undefined]
 const DEFAULT_PROFILE = "custom";
 
 const TILE_PROFILES = {
-  cpu: { name: "CPU", icon: "mdi:chip", unit: "%", thresholds_pct: { warn: 70, bad: 90 }, bar_max: 100 },
-  memory: { name: "Memory", icon: "mdi:memory", unit: "%", thresholds_pct: { warn: 75, bad: 90 }, bar_max: 100 },
-  disk: { name: "Disk", icon: "mdi:harddisk", unit: "%", thresholds_pct: { warn: 70, bad: 90 }, bar_max: 100 },
-  temperature: { name: "Temp", icon: "mdi:thermometer", unit: "", thresholds_pct: { warn: 65, bad: 80 }, bar_max: 100 },
-  power: { name: "Power", icon: "mdi:flash", unit: "W", thresholds_pct: { warn: 70, bad: 90 }, bar_max: 100 },
-  network: { name: "Network", icon: "mdi:network", unit: "", thresholds_pct: { warn: 70, bad: 90 }, bar_max: 100 },
-  fan: { name: "Fan", icon: "mdi:fan", unit: "RPM", thresholds_pct: { warn: 70, bad: 90 }, bar_max: 100 },
-  time: { name: "Time", icon: "mdi:clock-outline", unit: "", thresholds: null, bar_max: null },
-  voltage: { name: "Voltage", icon: "mdi:sine-wave", unit: "V", thresholds_pct: { warn: 70, bad: 90 }, bar_max: 100 },
-  battery: { name: "Battery", icon: "mdi:battery", unit: "%", thresholds_pct: { warn: 30, bad: 15, direction: "low" }, bar_max: 100 },
-  humidity: { name: "Humidity", icon: "mdi:water-percent", unit: "%", thresholds_pct: { warn: 70, bad: 90 }, bar_max: 100 },
-  energy: { name: "Energy", icon: "mdi:lightning-bolt", unit: "", thresholds_pct: { warn: 70, bad: 90 }, bar_max: 100 },
+  cpu: { name: "CPU", icon: "mdi:chip", unit: "%", thresholds_pct: { warn: 70, bad: 90 }, bar_max: 100, supports_bar: true, supports_threshold_inversion: true },
+  memory: { name: "Memory", icon: "mdi:memory", unit: "%", thresholds_pct: { warn: 75, bad: 90 }, bar_max: 100, supports_bar: true, supports_threshold_inversion: true },
+  disk: { name: "Disk", icon: "mdi:harddisk", unit: "%", thresholds_pct: { warn: 70, bad: 90 }, bar_max: 100, supports_bar: true, supports_threshold_inversion: true },
+  temperature: { name: "Temp", icon: "mdi:thermometer", unit: "", thresholds_pct: { warn: 65, bad: 80 }, bar_max: 100, supports_bar: true, supports_threshold_inversion: true },
+  power: { name: "Power", icon: "mdi:flash", unit: "W", thresholds_pct: { warn: 70, bad: 90 }, bar_max: 100, supports_bar: true, supports_threshold_inversion: true },
+  network: { name: "Network", icon: "mdi:network", unit: "", thresholds_pct: { warn: 70, bad: 90 }, bar_max: 100, supports_bar: true, supports_threshold_inversion: true },
+  fan: { name: "Fan", icon: "mdi:fan", unit: "RPM", thresholds_pct: { warn: 70, bad: 90 }, bar_max: 100, supports_bar: true, supports_threshold_inversion: true },
+  time: { name: "Time", icon: "mdi:clock-outline", unit: "", thresholds: null, bar_max: null, supports_bar: false, supports_threshold_inversion: false, accepts_text_state: true },
+  voltage: { name: "Voltage", icon: "mdi:sine-wave", unit: "V", thresholds_pct: { warn: 70, bad: 90 }, bar_max: 100, supports_bar: true, supports_threshold_inversion: true },
+  battery: { name: "Battery", icon: "mdi:battery", unit: "%", thresholds_pct: { warn: 30, bad: 15, direction: "low" }, bar_max: 100, supports_bar: true, supports_threshold_inversion: false },
+  humidity: { name: "Humidity", icon: "mdi:water-percent", unit: "%", thresholds_pct: { warn: 70, bad: 90 }, bar_max: 100, supports_bar: true, supports_threshold_inversion: true },
+  energy: { name: "Energy", icon: "mdi:lightning-bolt", unit: "", thresholds_pct: { warn: 70, bad: 90 }, bar_max: 100, supports_bar: true, supports_threshold_inversion: true },
   dbm: {
     name: "dBm",
     icon: "mdi:wifi",
@@ -36,14 +36,23 @@ const TILE_PROFILES = {
     thresholds: { warn: -70, bad: -75, direction: "low" },
     bar_min: -100,
     bar_max: -50,
+    supports_bar: true,
+    supports_threshold_inversion: false,
   },
-  custom: { name: "Custom", icon: "mdi:gauge", unit: "", thresholds_pct: { warn: 70, bad: 90 }, bar_max: 100 },
+  custom: { name: "Custom", icon: "mdi:gauge", unit: "", thresholds_pct: { warn: 70, bad: 90 }, bar_max: 100, supports_bar: true, supports_threshold_inversion: true, accepts_text_state: true },
 };
 
 const DEFAULT_STATUS_COLORS = {
   good: "#34c759",
   warn: "#ff9f0a",
   bad: "#ff4d4d",
+};
+
+const EDITOR_FIELD_VISIBILITY = {
+  unit: (profile) => profile?.accepts_text_state !== false,
+  bar_max: (profile) => profile?.supports_bar !== false,
+  invert_thresholds: (profile) => Boolean(profile?.supports_threshold_inversion),
+  hide_bar: (profile) => profile?.supports_bar !== false,
 };
 
 function getDefaultTile(index) {
@@ -457,7 +466,8 @@ class StatusGridCard extends HTMLElement {
       return this._formatValue(numericValue, unit);
     }
 
-    if (tile?.profile === "custom") {
+    const profile = this._getProfileConfig(tile);
+    if (profile?.accepts_text_state) {
       const rawValue = stateObj?.state;
       if (!INVALID_STATE_VALUES.includes(rawValue)) {
         return this._formatValueString(rawValue, unit);
@@ -1060,16 +1070,16 @@ class StatusGridCardEditor extends HTMLElement {
               <span class="editor-tile__meta" data-tile-meta="${index}"></span>
             </div>
             <div class="editor-section editor-section--tile">
-              <ha-selector data-index="${index}" data-field="profile" data-selector-type="profile"></ha-selector>
-              <ha-textfield data-index="${index}" data-field="name" label="Label"></ha-textfield>
-              <ha-selector data-index="${index}" data-field="icon" data-selector-type="icon"></ha-selector>
-              <ha-selector data-index="${index}" data-field="entity" data-selector-type="entity"></ha-selector>
-              <ha-textfield data-index="${index}" data-field="unit" label="Unit override"></ha-textfield>
-              <ha-textfield data-index="${index}" data-field="bar_max" label="Bar max"></ha-textfield>
-              <ha-selector data-index="${index}" data-field="invert_thresholds" data-selector-type="invert_thresholds"></ha-selector>
-              <ha-selector data-index="${index}" data-field="hide_bar" data-selector-type="hide_bar"></ha-selector>
-              <ha-selector data-index="${index}" data-field="sub_entity" data-selector-type="sub_entity"></ha-selector>
-              <ha-textfield data-index="${index}" data-field="sub_unit" label="Sub unit override"></ha-textfield>
+              <div data-index="${index}" data-field-wrap="profile"><ha-selector data-index="${index}" data-field="profile" data-selector-type="profile"></ha-selector></div>
+              <div data-index="${index}" data-field-wrap="name"><ha-textfield data-index="${index}" data-field="name" label="Label"></ha-textfield></div>
+              <div data-index="${index}" data-field-wrap="icon"><ha-selector data-index="${index}" data-field="icon" data-selector-type="icon"></ha-selector></div>
+              <div data-index="${index}" data-field-wrap="entity"><ha-selector data-index="${index}" data-field="entity" data-selector-type="entity"></ha-selector></div>
+              <div data-index="${index}" data-field-wrap="unit"><ha-textfield data-index="${index}" data-field="unit" label="Unit override"></ha-textfield></div>
+              <div data-index="${index}" data-field-wrap="bar_max"><ha-textfield data-index="${index}" data-field="bar_max" label="Bar max"></ha-textfield></div>
+              <div data-index="${index}" data-field-wrap="invert_thresholds"><ha-selector data-index="${index}" data-field="invert_thresholds" data-selector-type="invert_thresholds"></ha-selector></div>
+              <div data-index="${index}" data-field-wrap="hide_bar"><ha-selector data-index="${index}" data-field="hide_bar" data-selector-type="hide_bar"></ha-selector></div>
+              <div data-index="${index}" data-field-wrap="sub_entity"><ha-selector data-index="${index}" data-field="sub_entity" data-selector-type="sub_entity"></ha-selector></div>
+              <div data-index="${index}" data-field-wrap="sub_unit"><ha-textfield data-index="${index}" data-field="sub_unit" label="Sub unit override"></ha-textfield></div>
             </div>
           </ha-expansion-panel>
         `).join("")}
@@ -1186,6 +1196,7 @@ class StatusGridCardEditor extends HTMLElement {
     this._elements.colorWarn = this.querySelector("#color_warn");
     this._elements.colorBad = this.querySelector("#color_bad");
     this._elements.fields = Array.from(this.querySelectorAll("[data-field]"));
+    this._elements.fieldWraps = Array.from(this.querySelectorAll("[data-field-wrap]"));
 
     this._elements.title?.addEventListener("value-changed", (event) => {
       this._updateTitle(this._getEventValue(event));
@@ -1326,6 +1337,12 @@ class StatusGridCardEditor extends HTMLElement {
   _getProfileConfig(tile) {
     const profile = this._normalizeProfile(tile?.profile || this._getLegacyProfile(tile));
     return TILE_PROFILES[profile] || TILE_PROFILES[DEFAULT_PROFILE];
+  }
+
+  _isFieldVisibleForTile(tile, fieldName) {
+    const visibilityRule = EDITOR_FIELD_VISIBILITY[fieldName];
+    if (!visibilityRule) return true;
+    return visibilityRule(this._getProfileConfig(tile), tile) !== false;
   }
 
   _configureSelectors() {
@@ -1476,6 +1493,13 @@ class StatusGridCardEditor extends HTMLElement {
     this.querySelectorAll("[data-tile-panel]").forEach((panel) => {
       const index = Number(panel.dataset.tilePanel);
       panel.hidden = index >= tileCount;
+    });
+
+    this._elements.fieldWraps?.forEach((wrap) => {
+      const index = Number(wrap.dataset.index);
+      const fieldName = wrap.dataset.fieldWrap;
+      const tile = this._config.tiles[index] || getDefaultTile(index);
+      wrap.hidden = !this._isFieldVisibleForTile(tile, fieldName);
     });
   }
 }
