@@ -128,6 +128,34 @@ class StatusGridCard extends HTMLElement {
     return 1;
   }
 
+  getGridOptions() {
+    const tileCount = this._normalizeTileCount(this._config?.tile_count);
+    const gridColumns = this._normalizeTileColumns(this._config?.tile_columns);
+    const fillHeight = Boolean(this._config?.fill_height);
+
+    const internalColumns = gridColumns === AUTO_TILE_COLUMNS ? 2 : gridColumns;
+    const tileRows = Math.max(1, Math.ceil(tileCount / internalColumns));
+    const columns = gridColumns === 1 ? 3 : gridColumns === 4 ? 12 : 6;
+
+    if (!fillHeight) {
+      return {
+        columns,
+        min_columns: 3,
+        max_columns: 12,
+      };
+    }
+
+    const rows = Math.max(2, tileRows * 2);
+
+    return {
+      rows,
+      min_rows: rows,
+      columns,
+      min_columns: 3,
+      max_columns: 12,
+    };
+  }
+
   _normalizeTileColumns(value) {
     if (value === AUTO_TILE_COLUMNS) return AUTO_TILE_COLUMNS;
     const num = Number(value);
