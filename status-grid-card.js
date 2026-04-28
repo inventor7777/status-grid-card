@@ -747,18 +747,29 @@ class StatusGridCard extends HTMLElement {
         }
 
         .status-grid-card .tile {
-          border: 1px solid var(--divider-color);
+          position: relative;
+          border: 1px solid transparent;
           background: rgba(var(--rgb-primary-text-color, 255, 255, 255), 0.07);
           color: inherit;
           text-align: left;
           padding: 8px;
-          border-radius: calc(var(--ha-card-border-radius, 12px) * 0.8);
+          border-radius: max(12px, calc(var(--ha-card-border-radius, 12px) * 0.8));
+          overflow: hidden;
           cursor: pointer;
           display: flex;
           flex-direction: column;
           justify-content: space-between;
           min-height: 50px;
           transition: transform 0.1s ease;
+        }
+
+        .status-grid-card .tile::before {
+          content: "";
+          position: absolute;
+          inset: 0;
+          border: 1px solid var(--divider-color);
+          border-radius: inherit;
+          pointer-events: none;
         }
 
         .status-grid-card .tile:focus-visible {
