@@ -21,7 +21,9 @@ type: custom:status-grid-card
 title: DXP4800
 tile_count: 4
 tile_columns: auto
+tile_contrast: default
 stack_on_small_screens: true
+hide_borders: false
 colors:
   good: "#34c759"
   warn: "#ff9f0a"
@@ -71,13 +73,20 @@ tiles:
   - `1` = single vertical column
   - `2` = 2 x 2 grid
   - `4` = one horizontal row
+- `tile_contrast` controls the contrast between each tile and the card background:
+  - `off` = no tile tint
+  - `default` = standard tile tint
+  - `high` = stronger tile tint
+  - `extra_high` = strongest tile tint
 - `stack_on_small_screens` forces a single-column layout at `480px` wide and below, regardless of the selected widget layout.
+- `hide_borders` removes the visible tile outlines, which can help in transparent themes.
 - In Home Assistant Sections view, the card now uses a native default footprint and fills whatever height you set with HA's own resize control.
 - Each tile can choose a `profile` such as `cpu`, `memory`, `disk`, `temperature`, `power`, `network`, `fan`, `time`, `voltage`, `battery`, `humidity`, `energy`, `dbm`, or `custom`.
 - Each tile can optionally define an `icon` using any MDI icon, and the visual editor now uses HA's native icon selector.
 - `unit` overrides the main entity unit, and `sub_unit` does the same for the sub-info entity.
-- `bar_max` sets the bar scale for the tile.
+- `bar_min` and `bar_max` set the bar scale for the tile.
 - `invert_thresholds` flips threshold logic so lower values become warning/critical, similar to battery behavior.
+- `warn_threshold` and `bad_threshold` let you customize warning and critical thresholds per tile.
 - `hide_bar` removes the bar completely for a tile.
 - `colors.good`, `colors.warn`, and `colors.bad` set the shared normal, medium, and critical colors for all tiles.
 - Tapping a tile opens more-info for that entity.

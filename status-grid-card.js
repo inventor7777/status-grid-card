@@ -9,6 +9,8 @@ const CARD_VERSION = "2026.04.08-4";
 const DEFAULT_TILE_COLUMNS = 2;
 const AUTO_TILE_COLUMNS = "auto";
 const VALID_TILE_COLUMNS = [1, 2, 4, AUTO_TILE_COLUMNS];
+const DEFAULT_TILE_CONTRAST = "default";
+const VALID_TILE_CONTRASTS = ["off", "default", "high", "extra_high"];
 const DEFAULT_TILE_COUNT = 4;
 const VALID_TILE_COUNTS = [2, 4, 6, 8];
 const DEFAULT_SECTION_ROWS = 4;
@@ -122,7 +124,9 @@ class StatusGridCard extends HTMLElement {
       title: "",
       tile_count: DEFAULT_TILE_COUNT,
       tile_columns: DEFAULT_TILE_COLUMNS,
+      tile_contrast: DEFAULT_TILE_CONTRAST,
       stack_on_small_screens: false,
+      hide_borders: false,
       colors: { ...DEFAULT_STATUS_COLORS },
       tiles: Array.from({ length: DEFAULT_TILE_COUNT }, (_, index) => getDefaultTile(index)),
     };
@@ -136,7 +140,9 @@ class StatusGridCard extends HTMLElement {
       title: config?.title ?? "",
       tile_count: tileCount,
       tile_columns: this._normalizeTileColumns(config?.tile_columns),
+      tile_contrast: this._normalizeTileContrast(config?.tile_contrast),
       stack_on_small_screens: Boolean(config?.stack_on_small_screens),
+      hide_borders: Boolean(config?.hide_borders),
       colors: this._normalizeColors(config?.colors),
       tiles: this._buildTiles(config?.tiles, tileCount),
     };
@@ -197,6 +203,12 @@ class StatusGridCard extends HTMLElement {
     const num = Number(value);
     if (VALID_TILE_COUNTS.includes(num)) return num;
     return DEFAULT_TILE_COUNT;
+  }
+
+  _normalizeTileContrast(value) {
+    const normalized = String(value || "").trim().toLowerCase();
+    if (VALID_TILE_CONTRASTS.includes(normalized)) return normalized;
+    return DEFAULT_TILE_CONTRAST;
   }
 
   _ensureResizeObserver() {
@@ -612,12 +624,21 @@ class StatusGridCard extends HTMLElement {
 
     const gridColumns = this._normalizeTileColumns(this._config.tile_columns);
     const isAutoLayout = gridColumns === AUTO_TILE_COLUMNS;
+    const tileContrast = this._normalizeTileContrast(this._config.tile_contrast);
     const stackOnSmallScreens = Boolean(this._config.stack_on_small_screens);
+    const hideBorders = Boolean(this._config.hide_borders);
     const title = this._renderedTitle ?? this._config.title ?? "";
     const trimmedTitle = String(title).trim();
     const titleHtml = trimmedTitle
       ? `<div class="title">${this._escapeHtml(trimmedTitle)}</div>`
       : "";
+    const tileBackgroundOpacity = tileContrast === "off"
+      ? 0
+      : tileContrast === "extra_high"
+        ? 0.21
+      : tileContrast === "high"
+        ? 0.105
+        : 0.07;
 
     this.style.display = "block";
     this.style.height = "100%";
@@ -684,7 +705,7 @@ class StatusGridCard extends HTMLElement {
       .join("");
 
     this.innerHTML = `
-      <div class="status-grid-card">
+      <div class="status-grid-card ${hideBorders ? "status-grid-card--hide-borders" : ""}">
         <ha-card>
           <div class="wrap ${trimmedTitle ? "wrap--with-title" : ""}">
             ${titleHtml}
@@ -749,7 +770,7 @@ class StatusGridCard extends HTMLElement {
         .status-grid-card .tile {
           position: relative;
           border: 1px solid transparent;
-          background: rgba(var(--rgb-primary-text-color, 255, 255, 255), 0.07);
+          background: rgba(var(--rgb-primary-text-color, 255, 255, 255), ${tileBackgroundOpacity});
           color: inherit;
           text-align: left;
           padding: 8px;
@@ -770,6 +791,10 @@ class StatusGridCard extends HTMLElement {
           border: 1px solid var(--divider-color);
           border-radius: inherit;
           pointer-events: none;
+        }
+
+        .status-grid-card.status-grid-card--hide-borders .tile::before {
+          display: none;
         }
 
         .status-grid-card .tile:focus-visible {
@@ -963,7 +988,9 @@ class StatusGridCardEditor extends HTMLElement {
       title: config?.title ?? "",
       tile_count: tileCount,
       tile_columns: this._normalizeTileColumns(config?.tile_columns),
+      tile_contrast: this._normalizeTileContrast(config?.tile_contrast),
       stack_on_small_screens: Boolean(config?.stack_on_small_screens),
+      hide_borders: Boolean(config?.hide_borders),
       colors: {
         ...DEFAULT_STATUS_COLORS,
         ...(config?.colors || {}),
@@ -1063,8 +1090,19 @@ class StatusGridCardEditor extends HTMLElement {
     this._emitConfig();
   }
 
+  _updateTileContrast(value) {
+    const tileContrast = this._normalizeTileContrast(value);
+    this._config = { ...this._config, tile_contrast: tileContrast };
+    this._emitConfig();
+  }
+
   _updateStackOnSmallScreens(value) {
     this._config = { ...this._config, stack_on_small_screens: Boolean(value) };
+    this._emitConfig();
+  }
+
+  _updateHideBorders(value) {
+    this._config = { ...this._config, hide_borders: Boolean(value) };
     this._emitConfig();
   }
 
@@ -1128,7 +1166,9 @@ class StatusGridCardEditor extends HTMLElement {
         </label>
         <ha-selector id="tile_count"></ha-selector>
         <ha-selector id="tile_columns"></ha-selector>
+        <ha-selector id="tile_contrast"></ha-selector>
         <ha-selector id="stack_on_small_screens"></ha-selector>
+        <ha-selector id="hide_borders"></ha-selector>
         <div class="editor-section">
           <div class="editor-section__title">COLORS</div>
           <label class="editor-color">
@@ -1301,7 +1341,9 @@ class StatusGridCardEditor extends HTMLElement {
     this._elements.title = this.querySelector("#title");
     this._elements.tileCount = this.querySelector("#tile_count");
     this._elements.tileColumns = this.querySelector("#tile_columns");
+    this._elements.tileContrast = this.querySelector("#tile_contrast");
     this._elements.stackOnSmallScreens = this.querySelector("#stack_on_small_screens");
+    this._elements.hideBorders = this.querySelector("#hide_borders");
     this._elements.colorGood = this.querySelector("#color_good");
     this._elements.colorWarn = this.querySelector("#color_warn");
     this._elements.colorBad = this.querySelector("#color_bad");
@@ -1333,8 +1375,24 @@ class StatusGridCardEditor extends HTMLElement {
     };
     this._elements.tileColumns.label = "Widget layout";
 
+    this._elements.tileContrast.selector = {
+      select: {
+        mode: "dropdown",
+        options: [
+          { value: "off", label: "Off" },
+          { value: "default", label: "Default" },
+          { value: "high", label: "High" },
+          { value: "extra_high", label: "Extra high" },
+        ],
+      },
+    };
+    this._elements.tileContrast.label = "Tile contrast";
+
     this._elements.stackOnSmallScreens.selector = { boolean: {} };
     this._elements.stackOnSmallScreens.label = "Stack on small screens";
+
+    this._elements.hideBorders.selector = { boolean: {} };
+    this._elements.hideBorders.label = "Hide borders";
     this._configureSelectors();
 
     const handleTileCountChange = (event) => {
@@ -1345,13 +1403,23 @@ class StatusGridCardEditor extends HTMLElement {
       this._updateTileColumns(this._getEventValue(event));
     };
 
+    const handleTileContrastChange = (event) => {
+      this._updateTileContrast(this._getEventValue(event));
+    };
+
     const handleStackOnSmallScreensChange = (event) => {
       this._updateStackOnSmallScreens(this._getEventValue(event));
     };
 
+    const handleHideBordersChange = (event) => {
+      this._updateHideBorders(this._getEventValue(event));
+    };
+
     this._elements.tileCount?.addEventListener("value-changed", handleTileCountChange);
     this._elements.tileColumns?.addEventListener("value-changed", handleTileColumnsChange);
+    this._elements.tileContrast?.addEventListener("value-changed", handleTileContrastChange);
     this._elements.stackOnSmallScreens?.addEventListener("value-changed", handleStackOnSmallScreensChange);
+    this._elements.hideBorders?.addEventListener("value-changed", handleHideBordersChange);
 
     this._elements.colorGood?.addEventListener("input", (event) => {
       this._updateColor("good", event.target.value);
@@ -1393,6 +1461,12 @@ class StatusGridCardEditor extends HTMLElement {
     const num = Number(value);
     if (VALID_TILE_COUNTS.includes(num)) return num;
     return DEFAULT_TILE_COUNT;
+  }
+
+  _normalizeTileContrast(value) {
+    const normalized = String(value || "").trim().toLowerCase();
+    if (VALID_TILE_CONTRASTS.includes(normalized)) return normalized;
+    return DEFAULT_TILE_CONTRAST;
   }
 
   _normalizeProfile(value) {
@@ -1528,8 +1602,16 @@ class StatusGridCardEditor extends HTMLElement {
       this._elements.tileColumns.hass = this._hass;
     }
 
+    if (this._elements.tileContrast) {
+      this._elements.tileContrast.hass = this._hass;
+    }
+
     if (this._elements.stackOnSmallScreens) {
       this._elements.stackOnSmallScreens.hass = this._hass;
+    }
+
+    if (this._elements.hideBorders) {
+      this._elements.hideBorders.hass = this._hass;
     }
 
     this._elements.fields?.forEach((field) => {
@@ -1561,10 +1643,24 @@ class StatusGridCardEditor extends HTMLElement {
     }
 
     if (
+      this._elements.tileContrast
+      && this._elements.tileContrast.value !== this._normalizeTileContrast(this._config.tile_contrast)
+    ) {
+      this._elements.tileContrast.value = this._normalizeTileContrast(this._config.tile_contrast);
+    }
+
+    if (
       this._elements.stackOnSmallScreens
       && this._elements.stackOnSmallScreens.value !== Boolean(this._config.stack_on_small_screens)
     ) {
       this._elements.stackOnSmallScreens.value = Boolean(this._config.stack_on_small_screens);
+    }
+
+    if (
+      this._elements.hideBorders
+      && this._elements.hideBorders.value !== Boolean(this._config.hide_borders)
+    ) {
+      this._elements.hideBorders.value = Boolean(this._config.hide_borders);
     }
 
     const colors = {
