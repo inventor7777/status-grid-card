@@ -11,6 +11,9 @@ const AUTO_TILE_COLUMNS = "auto";
 const VALID_TILE_COLUMNS = [1, 2, 4, AUTO_TILE_COLUMNS];
 const DEFAULT_TILE_CONTRAST = "default";
 const VALID_TILE_CONTRASTS = ["off", "default", "high", "extra_high"];
+const DEFAULT_TITLE_SIZE = 11;
+const DEFAULT_TITLE_WEIGHT = "400";
+const VALID_TITLE_WEIGHTS = ["300", "400", "500", "600", "700", "800", "900"];
 const DEFAULT_TILE_COUNT = 4;
 const VALID_TILE_COUNTS = [2, 4, 6, 8];
 const DEFAULT_SECTION_ROWS = 4;
@@ -122,6 +125,8 @@ class StatusGridCard extends HTMLElement {
     return {
       type: "custom:status-grid-card",
       title: "",
+      title_size: DEFAULT_TITLE_SIZE,
+      title_weight: DEFAULT_TITLE_WEIGHT,
       tile_count: DEFAULT_TILE_COUNT,
       tile_columns: DEFAULT_TILE_COLUMNS,
       tile_contrast: DEFAULT_TILE_CONTRAST,
@@ -138,6 +143,8 @@ class StatusGridCard extends HTMLElement {
       ...(config || {}),
       type: "custom:status-grid-card",
       title: config?.title ?? "",
+      title_size: this._normalizeTitleSize(config?.title_size),
+      title_weight: this._normalizeTitleWeight(config?.title_weight),
       tile_count: tileCount,
       tile_columns: this._normalizeTileColumns(config?.tile_columns),
       tile_contrast: this._normalizeTileContrast(config?.tile_contrast),
@@ -203,6 +210,17 @@ class StatusGridCard extends HTMLElement {
     const num = Number(value);
     if (VALID_TILE_COUNTS.includes(num)) return num;
     return DEFAULT_TILE_COUNT;
+  }
+
+  _normalizeTitleSize(value) {
+    const num = Number(value);
+    return Number.isFinite(num) && num > 0 ? num : DEFAULT_TITLE_SIZE;
+  }
+
+  _normalizeTitleWeight(value) {
+    const normalized = String(value || "").trim();
+    if (VALID_TITLE_WEIGHTS.includes(normalized)) return normalized;
+    return DEFAULT_TITLE_WEIGHT;
   }
 
   _normalizeTileContrast(value) {
@@ -628,6 +646,8 @@ class StatusGridCard extends HTMLElement {
     const stackOnSmallScreens = Boolean(this._config.stack_on_small_screens);
     const hideBorders = Boolean(this._config.hide_borders);
     const title = this._renderedTitle ?? this._config.title ?? "";
+    const titleSize = this._normalizeTitleSize(this._config.title_size);
+    const titleWeight = this._normalizeTitleWeight(this._config.title_weight);
     const trimmedTitle = String(title).trim();
     const titleHtml = trimmedTitle
       ? `<div class="title">${this._escapeHtml(trimmedTitle)}</div>`
@@ -705,7 +725,10 @@ class StatusGridCard extends HTMLElement {
       .join("");
 
     this.innerHTML = `
-      <div class="status-grid-card ${hideBorders ? "status-grid-card--hide-borders" : ""}">
+      <div
+        class="status-grid-card ${hideBorders ? "status-grid-card--hide-borders" : ""}"
+        style="--sgc-title-size:${titleSize}px; --sgc-title-weight:${titleWeight}; --sgc-tile-bg-opacity:${tileBackgroundOpacity};"
+      >
         <ha-card>
           <div class="wrap ${trimmedTitle ? "wrap--with-title" : ""}">
             ${titleHtml}
@@ -747,10 +770,9 @@ class StatusGridCard extends HTMLElement {
         }
 
         .status-grid-card .title {
-          font-size: 11px;
+          font-size: var(--sgc-title-size, 11px);
+          font-weight: var(--sgc-title-weight, 400);
           color: var(--secondary-text-color);
-          text-transform: uppercase;
-          letter-spacing: 0.1em;
           text-align: center;
         }
 
@@ -770,7 +792,7 @@ class StatusGridCard extends HTMLElement {
         .status-grid-card .tile {
           position: relative;
           border: 1px solid transparent;
-          background: rgba(var(--rgb-primary-text-color, 255, 255, 255), ${tileBackgroundOpacity});
+          background: rgba(var(--rgb-primary-text-color, 255, 255, 255), var(--sgc-tile-bg-opacity, 0.07));
           color: inherit;
           text-align: left;
           padding: 8px;
@@ -986,6 +1008,8 @@ class StatusGridCardEditor extends HTMLElement {
       ...(config || {}),
       type: "custom:status-grid-card",
       title: config?.title ?? "",
+      title_size: this._normalizeTitleSize(config?.title_size),
+      title_weight: this._normalizeTitleWeight(config?.title_weight),
       tile_count: tileCount,
       tile_columns: this._normalizeTileColumns(config?.tile_columns),
       tile_contrast: this._normalizeTileContrast(config?.tile_contrast),
@@ -1029,6 +1053,16 @@ class StatusGridCardEditor extends HTMLElement {
 
   _updateTitle(value) {
     this._config = { ...this._config, title: value };
+    this._emitConfig();
+  }
+
+  _updateTitleSize(value) {
+    this._config = { ...this._config, title_size: this._normalizeTitleSize(value) };
+    this._emitConfig();
+  }
+
+  _updateTitleWeight(value) {
+    this._config = { ...this._config, title_weight: this._normalizeTitleWeight(value) };
     this._emitConfig();
   }
 
@@ -1164,6 +1198,10 @@ class StatusGridCardEditor extends HTMLElement {
             dir="ltr"
           ></ha-code-editor>
         </label>
+        <div class="editor-inline">
+          <ha-textfield id="title_size" type="number" label="Title size (px)"></ha-textfield>
+          <ha-selector id="title_weight"></ha-selector>
+        </div>
         <ha-selector id="tile_count"></ha-selector>
         <ha-selector id="tile_columns"></ha-selector>
         <ha-selector id="tile_contrast"></ha-selector>
@@ -1307,6 +1345,12 @@ class StatusGridCardEditor extends HTMLElement {
           overflow: hidden;
         }
 
+        .editor-inline {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 12px;
+        }
+
         .editor-color {
           display: flex;
           align-items: center;
@@ -1339,6 +1383,8 @@ class StatusGridCardEditor extends HTMLElement {
     `;
 
     this._elements.title = this.querySelector("#title");
+    this._elements.titleSize = this.querySelector("#title_size");
+    this._elements.titleWeight = this.querySelector("#title_weight");
     this._elements.tileCount = this.querySelector("#tile_count");
     this._elements.tileColumns = this.querySelector("#tile_columns");
     this._elements.tileContrast = this.querySelector("#tile_contrast");
@@ -1352,6 +1398,22 @@ class StatusGridCardEditor extends HTMLElement {
 
     this._elements.title?.addEventListener("value-changed", (event) => {
       this._updateTitle(this._getEventValue(event));
+    });
+
+    this._elements.titleSize?.addEventListener("change", (event) => {
+      this._updateTitleSize(this._getEventValue(event));
+    });
+
+    this._elements.titleWeight.selector = {
+      select: {
+        mode: "dropdown",
+        options: VALID_TITLE_WEIGHTS.map((weight) => ({ value: weight, label: weight })),
+      },
+    };
+    this._elements.titleWeight.label = "Title weight";
+
+    this._elements.titleWeight?.addEventListener("value-changed", (event) => {
+      this._updateTitleWeight(this._getEventValue(event));
     });
 
     this._elements.tileCount.selector = {
@@ -1461,6 +1523,17 @@ class StatusGridCardEditor extends HTMLElement {
     const num = Number(value);
     if (VALID_TILE_COUNTS.includes(num)) return num;
     return DEFAULT_TILE_COUNT;
+  }
+
+  _normalizeTitleSize(value) {
+    const num = Number(value);
+    return Number.isFinite(num) && num > 0 ? num : DEFAULT_TITLE_SIZE;
+  }
+
+  _normalizeTitleWeight(value) {
+    const normalized = String(value || "").trim();
+    if (VALID_TITLE_WEIGHTS.includes(normalized)) return normalized;
+    return DEFAULT_TITLE_WEIGHT;
   }
 
   _normalizeTileContrast(value) {
@@ -1594,6 +1667,14 @@ class StatusGridCardEditor extends HTMLElement {
       this._elements.title.hass = this._hass;
     }
 
+    if (this._elements.titleSize) {
+      this._elements.titleSize.hass = this._hass;
+    }
+
+    if (this._elements.titleWeight) {
+      this._elements.titleWeight.hass = this._hass;
+    }
+
     if (this._elements.tileCount) {
       this._elements.tileCount.hass = this._hass;
     }
@@ -1624,6 +1705,20 @@ class StatusGridCardEditor extends HTMLElement {
 
     if (this._elements.title && this._elements.title.value !== this._config.title) {
       this._elements.title.value = this._config.title || "";
+    }
+
+    if (
+      this._elements.titleSize
+      && this._elements.titleSize.value !== String(this._normalizeTitleSize(this._config.title_size))
+    ) {
+      this._elements.titleSize.value = String(this._normalizeTitleSize(this._config.title_size));
+    }
+
+    if (
+      this._elements.titleWeight
+      && this._elements.titleWeight.value !== this._normalizeTitleWeight(this._config.title_weight)
+    ) {
+      this._elements.titleWeight.value = this._normalizeTitleWeight(this._config.title_weight);
     }
 
     if (
