@@ -585,6 +585,25 @@ class StatusGridCard extends HTMLElement {
     );
   }
 
+  _getActionHandler() {
+    const host = document.body;
+    if (!host) return null;
+
+    let actionHandler = host.querySelector("action-handler");
+    if (!actionHandler) {
+      actionHandler = document.createElement("action-handler");
+      host.appendChild(actionHandler);
+    }
+
+    return actionHandler;
+  }
+
+  _bindActionHandler(element, options = {}) {
+    const actionHandler = this._getActionHandler();
+    if (!actionHandler?.bind) return;
+    actionHandler.bind(element, options);
+  }
+
   _isTemplatedTitle(title) {
     if (!title) return false;
     return title.includes("{{") || title.includes("{%");
@@ -967,9 +986,16 @@ class StatusGridCard extends HTMLElement {
     `;
 
     this.querySelectorAll(".tile").forEach((tileEl) => {
-      tileEl.addEventListener("click", () => {
+      this._bindActionHandler(tileEl, {
+        hasHold: false,
+        hasDoubleClick: false,
+      });
+
+      tileEl.addEventListener("action", (event) => {
+        if (event?.detail?.action !== "tap") return;
         this._openMoreInfo(tileEl.dataset.entity);
       });
+
       tileEl.addEventListener("keydown", (event) => {
         if (event.key !== "Enter" && event.key !== " ") return;
         event.preventDefault();
@@ -978,10 +1004,17 @@ class StatusGridCard extends HTMLElement {
     });
 
     this.querySelectorAll(".tile__sub").forEach((subEl) => {
-      subEl.addEventListener("click", (event) => {
+      this._bindActionHandler(subEl, {
+        hasHold: false,
+        hasDoubleClick: false,
+      });
+
+      subEl.addEventListener("action", (event) => {
+        if (event?.detail?.action !== "tap") return;
         event.stopPropagation();
         this._openMoreInfo(subEl.dataset.subEntity);
       });
+
       subEl.addEventListener("keydown", (event) => {
         if (event.key !== "Enter" && event.key !== " ") return;
         event.preventDefault();
