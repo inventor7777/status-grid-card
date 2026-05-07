@@ -604,154 +604,14 @@ class StatusGridCard extends HTMLElement {
     actionHandler.bind(element, options);
   }
 
-  _isTemplatedTitle(title) {
-    if (!title) return false;
-    return title.includes("{{") || title.includes("{%");
-  }
-
-  _clearTitleTemplate() {
-    this._titleRequestId += 1;
-
-    if (this._titleUnsubscribe) {
-      this._titleUnsubscribe();
-      this._titleUnsubscribe = undefined;
-    }
-  }
-
-  async _updateTitleTemplate() {
-    const title = this._config?.title ?? "";
-
-    this._clearTitleTemplate();
-
-    if (!this._isTemplatedTitle(title) || !this._hass?.connection) {
-      this._renderedTitle = title;
-      this.render();
-      return;
-    }
-
-    const requestId = this._titleRequestId;
-
-    try {
-      const unsubscribe = await this._hass.connection.subscribeMessage(
-        (message) => {
-          if (requestId !== this._titleRequestId) return;
-          this._renderedTitle = message?.result ?? title;
-          this.render();
-        },
-        {
-          type: "render_template",
-          template: title,
-        },
-      );
-
-      if (requestId !== this._titleRequestId) {
-        unsubscribe?.();
-        return;
-      }
-
-      this._titleUnsubscribe = unsubscribe;
-    } catch (error) {
-      this._renderedTitle = title;
-      this.render();
-    }
-  }
-
-  render() {
-    if (!this._config) return;
-
-    const gridColumns = this._normalizeTileColumns(this._config.tile_columns);
-    const isAutoLayout = gridColumns === AUTO_TILE_COLUMNS;
-    const tileContrast = this._normalizeTileContrast(this._config.tile_contrast);
-    const stackOnSmallScreens = Boolean(this._config.stack_on_small_screens);
-    const hideBorders = Boolean(this._config.hide_borders);
-    const title = this._renderedTitle ?? this._config.title ?? "";
-    const titleSize = this._normalizeTitleSize(this._config.title_size);
-    const titleWeight = this._normalizeTitleWeight(this._config.title_weight);
-    const trimmedTitle = String(title).trim();
-    const titleHtml = trimmedTitle
-      ? `<div class="title">${this._escapeHtml(trimmedTitle)}</div>`
-      : "";
-    const tileBackgroundOpacity = tileContrast === "off"
-      ? 0
-      : tileContrast === "extra_high"
-        ? 0.21
-      : tileContrast === "high"
-        ? 0.105
-        : 0.07;
-
-    this.style.display = "block";
-    this.style.height = "100%";
-    this.style.minHeight = "0";
-
-    const tilesHtml = this._config.tiles
-      .map((rawTile) => {
-        const tile = this._normalizeTile(rawTile);
-        const stateObj = this._getStateObject(tile.entity);
-        const value = this._getNumericValue(tile.entity);
-        const subValue = this._getSubValue(tile);
-        const unit = this._getUnit(tile, stateObj);
-        const color = this._getColor(tile, value);
-        const displayValue = this._getDisplayValue(tile, stateObj, value, unit);
-        const barWidth = this._getBarWidth(tile, value);
-        const visibleBarWidth = barWidth > 0 ? Math.max(barWidth, 2) : 0;
-        const barHtml = tile.hide_bar
-          ? ""
-          : `
-              <div class="tile__bar-track">
-                <div
-                  class="tile__bar-fill"
-                  style="width:${visibleBarWidth}%; --tile-color:${color};"
-                ></div>
-              </div>
-            `;
-
-        return `
-          <div
-            class="tile ${tile.hide_bar ? "tile--no-bar" : ""}"
-            data-entity="${this._escapeHtml(tile.entity || "")}"
-            role="button"
-            tabindex="0"
-          >
-            <div class="tile__content">
-              <div class="tile__label-stack">${this._renderVerticalLabel(tile.name || tile.key)}</div>
-              <div class="tile__value-row">
-                ${tile.icon ? `
-                  <ha-icon
-                    class="tile__icon"
-                    icon="${this._escapeHtml(tile.icon)}"
-                  ></ha-icon>
-                ` : ""}
-                <div class="tile__value-main">
-                  <div class="tile__value" style="color:${color}">
-                    ${this._escapeHtml(displayValue)}
-                  </div>
-                  ${subValue ? `
-                    <button
-                      type="button"
-                      class="tile__sub"
-                      data-sub-entity="${this._escapeHtml(tile.sub_entity || "")}"
-                    >
-                      ${this._escapeHtml(subValue)}
-                    </button>
-                  ` : ""}
-                </div>
-              </div>
-              ${barHtml}
-            </div>
-          </div>
-        `;
-      })
-      .join("");
+  _ensureCardShell() {
+    if (this.querySelector(".status-grid-card")) return;
 
     this.innerHTML = `
-      <div
-        class="status-grid-card ${hideBorders ? "status-grid-card--hide-borders" : ""}"
-        style="--sgc-title-size:${titleSize}px; --sgc-title-weight:${titleWeight}; --sgc-tile-bg-opacity:${tileBackgroundOpacity};"
-      >
+      <div class="status-grid-card">
         <ha-card>
-          <div class="wrap ${trimmedTitle ? "wrap--with-title" : ""}">
-            ${titleHtml}
-            <div class="grid ${isAutoLayout ? "grid--auto" : ""} ${stackOnSmallScreens ? "grid--stack-small" : ""}" ${isAutoLayout ? "" : `style="--tile-columns:${gridColumns};"`}>${tilesHtml}</div>
+          <div class="wrap">
+            <div class="grid"></div>
           </div>
         </ha-card>
       </div>
@@ -760,10 +620,12 @@ class StatusGridCard extends HTMLElement {
           display: block;
           height: 100%;
           min-height: 100%;
+          overflow-anchor: none;
         }
 
         .status-grid-card ha-card {
           overflow: hidden;
+          overflow-anchor: none;
           background: var(--ha-card-background, var(--card-background-color));
           border-radius: var(--ha-card-border-radius, 12px);
           box-shadow: var(--ha-card-box-shadow);
@@ -984,6 +846,175 @@ class StatusGridCard extends HTMLElement {
         }
       </style>
     `;
+  }
+
+  _isTemplatedTitle(title) {
+    if (!title) return false;
+    return title.includes("{{") || title.includes("{%");
+  }
+
+  _clearTitleTemplate() {
+    this._titleRequestId += 1;
+
+    if (this._titleUnsubscribe) {
+      this._titleUnsubscribe();
+      this._titleUnsubscribe = undefined;
+    }
+  }
+
+  async _updateTitleTemplate() {
+    const title = this._config?.title ?? "";
+
+    this._clearTitleTemplate();
+
+    if (!this._isTemplatedTitle(title) || !this._hass?.connection) {
+      this._renderedTitle = title;
+      this.render();
+      return;
+    }
+
+    const requestId = this._titleRequestId;
+
+    try {
+      const unsubscribe = await this._hass.connection.subscribeMessage(
+        (message) => {
+          if (requestId !== this._titleRequestId) return;
+          this._renderedTitle = message?.result ?? title;
+          this.render();
+        },
+        {
+          type: "render_template",
+          template: title,
+        },
+      );
+
+      if (requestId !== this._titleRequestId) {
+        unsubscribe?.();
+        return;
+      }
+
+      this._titleUnsubscribe = unsubscribe;
+    } catch (error) {
+      this._renderedTitle = title;
+      this.render();
+    }
+  }
+
+  render() {
+    if (!this._config) return;
+
+    const gridColumns = this._normalizeTileColumns(this._config.tile_columns);
+    const isAutoLayout = gridColumns === AUTO_TILE_COLUMNS;
+    const tileContrast = this._normalizeTileContrast(this._config.tile_contrast);
+    const stackOnSmallScreens = Boolean(this._config.stack_on_small_screens);
+    const hideBorders = Boolean(this._config.hide_borders);
+    const title = this._renderedTitle ?? this._config.title ?? "";
+    const titleSize = this._normalizeTitleSize(this._config.title_size);
+    const titleWeight = this._normalizeTitleWeight(this._config.title_weight);
+    const trimmedTitle = String(title).trim();
+    const tileBackgroundOpacity = tileContrast === "off"
+      ? 0
+      : tileContrast === "extra_high"
+        ? 0.21
+      : tileContrast === "high"
+        ? 0.105
+        : 0.07;
+
+    this.style.display = "block";
+    this.style.height = "100%";
+    this.style.minHeight = "0";
+    this._ensureCardShell();
+
+    const tilesHtml = this._config.tiles
+      .map((rawTile) => {
+        const tile = this._normalizeTile(rawTile);
+        const stateObj = this._getStateObject(tile.entity);
+        const value = this._getNumericValue(tile.entity);
+        const subValue = this._getSubValue(tile);
+        const unit = this._getUnit(tile, stateObj);
+        const color = this._getColor(tile, value);
+        const displayValue = this._getDisplayValue(tile, stateObj, value, unit);
+        const barWidth = this._getBarWidth(tile, value);
+        const visibleBarWidth = barWidth > 0 ? Math.max(barWidth, 2) : 0;
+        const barHtml = tile.hide_bar
+          ? ""
+          : `
+              <div class="tile__bar-track">
+                <div
+                  class="tile__bar-fill"
+                  style="width:${visibleBarWidth}%; --tile-color:${color};"
+                ></div>
+              </div>
+            `;
+
+        return `
+          <div
+            class="tile ${tile.hide_bar ? "tile--no-bar" : ""}"
+            data-entity="${this._escapeHtml(tile.entity || "")}"
+            role="button"
+            tabindex="0"
+          >
+            <div class="tile__content">
+              <div class="tile__label-stack">${this._renderVerticalLabel(tile.name || tile.key)}</div>
+              <div class="tile__value-row">
+                ${tile.icon ? `
+                  <ha-icon
+                    class="tile__icon"
+                    icon="${this._escapeHtml(tile.icon)}"
+                  ></ha-icon>
+                ` : ""}
+                <div class="tile__value-main">
+                  <div class="tile__value" style="color:${color}">
+                    ${this._escapeHtml(displayValue)}
+                  </div>
+                  ${subValue ? `
+                    <button
+                      type="button"
+                      class="tile__sub"
+                      data-sub-entity="${this._escapeHtml(tile.sub_entity || "")}"
+                    >
+                      ${this._escapeHtml(subValue)}
+                    </button>
+                  ` : ""}
+                </div>
+              </div>
+              ${barHtml}
+            </div>
+          </div>
+        `;
+      })
+      .join("");
+
+    const cardRoot = this.querySelector(".status-grid-card");
+    const wrap = this.querySelector(".wrap");
+    const grid = this.querySelector(".grid");
+    let titleEl = this.querySelector(".title");
+
+    cardRoot.classList.toggle("status-grid-card--hide-borders", hideBorders);
+    cardRoot.style.setProperty("--sgc-title-size", `${titleSize}px`);
+    cardRoot.style.setProperty("--sgc-title-weight", titleWeight);
+    cardRoot.style.setProperty("--sgc-tile-bg-opacity", String(tileBackgroundOpacity));
+
+    wrap.classList.toggle("wrap--with-title", Boolean(trimmedTitle));
+
+    if (trimmedTitle) {
+      if (!titleEl) {
+        titleEl = document.createElement("div");
+        titleEl.className = "title";
+        wrap.insertBefore(titleEl, grid);
+      }
+      titleEl.textContent = trimmedTitle;
+    } else if (titleEl) {
+      titleEl.remove();
+    }
+
+    grid.className = `grid ${isAutoLayout ? "grid--auto" : ""} ${stackOnSmallScreens ? "grid--stack-small" : ""}`.trim();
+    if (isAutoLayout) {
+      grid.style.removeProperty("--tile-columns");
+    } else {
+      grid.style.setProperty("--tile-columns", String(gridColumns));
+    }
+    grid.innerHTML = tilesHtml;
 
     this.querySelectorAll(".tile").forEach((tileEl) => {
       this._bindActionHandler(tileEl, {
